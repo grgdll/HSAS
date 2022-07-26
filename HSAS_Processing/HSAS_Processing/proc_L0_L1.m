@@ -28,7 +28,7 @@ addpath(strcat(pwd, "/cruise_specific_functions")) %assumes code is run from ../
 addpath(strcat(pwd, "/rad_functions/"))
 addpath(strcat(pwd, "/rad_functions/intwv"))
 addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman"))
-addpath(strcat(pwd, "rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"))
+addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"))
 
 
 # read input parameters for this cruise
@@ -48,8 +48,8 @@ fnin = {"20220713"}; % tj - TEMPORARY HARD CODING - 1st day of FICE2022
 DATESTR = fnin{1};
 VERSION   = "v1";#fnin{3};
  
-%doy = num2str(jday(datenum(DATESTR, "yyyymmdd")));
-doy = fnin{1}
+doy = num2str(jday(datenum(DATESTR, "yyyymmdd")));
+%doy = fnin{1}
  
 
 
@@ -121,7 +121,7 @@ endif
 ### Read GPS data ###
 #
 # here we should use functions name in input parameters to read gps data 
-	fn_gps = glob([DIR_GPS, DATESTR2, GLOB_GPS]){1}
+	fn_gps = glob([DIR_GPS, DATESTR2, GLOB_GPS]){1} % fill with lat lon from platform
 	gps = FNC_RD_GPS(  fn_gps   );
 
 	
@@ -130,21 +130,21 @@ endif
 	fn_ths = glob([DIR_ATT, DATESTR2, GLOB_ATT]){1};
 	ths = FNC_RD_ATT(  fn_ths   );
 	
-	ths.tilt = cmp_tilt(ths.roll, ths.pitch); # compute tilt
+	ths.tilt = cmp_tilt(ths.roll, ths.pitch); # fill with tilt =0
 	
 	
 #----------------------------------
 ### Read WIND data ###
 # here we should use functions name in input parameters to read gps data 
 	fn_wind = glob([DIR_WIND, DATESTR2, GLOB_WIND]){1};
-	wind = FNC_RD_WIND(  fn_wind   );
+	wind = FNC_RD_WIND(  fn_wind   ); % wind data are not in utc - check bias correction in xls file
 
 #----------------------------------
 ### Read other met and surface data ###
 # here we should use functions name in input parameters to read gps data 
 if exist(DIR_SURF)
 	fn_surf = glob([DIR_SURF, DATESTR2, GLOB_SURF]){1};
-	surf = FNC_RD_SURF(  fn_surf   );
+	surf = FNC_RD_SURF(  fn_surf   ); % similar to wind
 endif
 
 
