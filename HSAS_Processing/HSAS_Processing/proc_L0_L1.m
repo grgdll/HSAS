@@ -64,10 +64,11 @@ dout_L1   	= [DOUT_HSAS "L1/" DATESTR "/" ];
 
 fnbase 	= [num2str(DEF_YEAR) '-' doy];
 YYYY = sprintf("%4u", DEF_YEAR);
-[M,D] = jday2mmdd(DEF_YEAR,str2num(doy));
+[M,D] = jday2mmdd(DEF_YEAR,str2num(doy)); % CODE currently breaks here
 MM = sprintf("%02u", M);
 DD = sprintf("%02u", D);
 DATESTR2 = [num2str(DEF_YEAR) doy];
+
 
 
  
