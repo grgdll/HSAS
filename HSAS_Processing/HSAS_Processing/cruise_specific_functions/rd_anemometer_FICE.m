@@ -1,21 +1,11 @@
 function d = rd_anemometer_FICE(fn)
+%FICE version of function to read wind data (xlsx files)
 
-
-addpath ~/Dropbox/Octave_functions
-
-#### first make sure there are no double commas in the file
-    system(["rm -f tmp" strsplit(fn ,"/"){end-1} ".tmp"]);
-    system(["sed s/,,/,nan,/ " fn " > tmp" strsplit(fn ,"/"){end-1} ".tmp"]);
-    system(["mv tmp" strsplit(fn ,"/"){end-1} ".tmp " fn]);
-
-
-
-	disp(['reading anemometer file: ' fn ]);
-	fflush(stdout);
-
-
-
-    fid = fopen(fn, "r");
+    pkg load io
+    [Data, Headers] = xlsread(fn)
+    
+    % note - now need to convert into structure d with fields time, wind speed and wind direction
+    
 
 #  amt24         2014,268.999410,268,0.99940972,005,18.5    
         fmt = "%f,%f,%f,%f,%f,%f\n";
