@@ -11,11 +11,11 @@
 	DEF_YEAR = 2022;
 	
 # dates to be processed
-	DAY_START = "194";
-	DAY_STOP = "202";
+	DAY_START = "194"; %13 july
+	DAY_STOP = "202"; %21 july
 
 # cruise name
-	CRUISE = "AMT28";
+	CRUISE = "FICE22";
 
 # HSAS instruments serial numbers
 	INSTRUMENT = "hsas";

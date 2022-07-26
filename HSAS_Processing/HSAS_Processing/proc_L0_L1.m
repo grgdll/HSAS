@@ -24,12 +24,11 @@ pkg load netcdf
 
 warning off #Turn off warnings
 
-addpath("../JCR")
-addpath("../JCR/cruise_specific_functions")
-addpath("../JCR/rad_functions/")
-addpath("../JCR/rad_functions/intwv")
-addpath("../JCR/rad_functions/DISTRIB_fQ_with_Raman")
-addpath("../JCR/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa")
+addpath(strcat(pwd, "/cruise_specific_functions")) %assumes code is run from ../HSAS_Processing
+addpath(strcat(pwd, "/rad_functions/"))
+addpath(strcat(pwd, "/rad_functions/intwv"))
+addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman"))
+addpath(strcat(pwd, "rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"))
 
 
 # read input parameters for this cruise
@@ -37,7 +36,8 @@ input_parameters_hsas;
 
 
 # Get arguments passed to function: INSTRUMENT switch is first argument xargs comes after
-fnin = argv; #
+%fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED 
+fnin = {"20220713"}; % tj - TEMPORARY HARD CODING - 1st day of FICE2022
 % fnin = {"20150916"};
 % fnin = {"hsas", ...
 %   		"20191017", ...
