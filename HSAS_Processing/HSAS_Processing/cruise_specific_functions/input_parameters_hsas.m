@@ -8,11 +8,11 @@
 	VBS = true;
 
 # year of dataset
-	DEF_YEAR = 2018;
+	DEF_YEAR = 2022;
 	
 # dates to be processed
-	DAY_START = "267";
-	DAY_STOP = "301";
+	DAY_START = "194";
+	DAY_STOP = "202";
 
 # cruise name
 	CRUISE = "AMT28";
@@ -20,10 +20,10 @@
 # HSAS instruments serial numbers
 	INSTRUMENT = "hsas";
 	radiometers = {"ES", "LI", "LT"};#  (similar instrument must be listed one after the other)
-	sn = {"258", "222", "223"};
+	sn = {"2027A", "2054A", "464"};
 	file_ext = {"H[ES][DE]", "*H[LS][DL]", "*H[LS][DL]"}; # wildcards to read files for each instrument
-	cal_files_pre = {"HSE258.cal", "HSL222.cal", "HSL223.cal"};
-	cal_files_post = {"HSE258.cal", "HSL222.cal", "HSL223.cal"};
+	cal_files_pre = {"HSE2027A.cal", "HSL2054A.cal", "HSL464.cal"};
+	cal_files_post = {"HSE2027A.cal", "HSL2054A.cal", "HSL464.cal"};
 	
 
 
@@ -31,7 +31,7 @@
    wv = [350:2:860]';  #Consistent with JRC format
 
 # main dir
-MAIN_DIR = "/users/rsg/junl/scratch_network/HSAS/AMT28/";   
+MAIN_DIR = "/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/";   
 
 
 ### INSTRUMENT serial numbers for trios (at least) are hardcoded
@@ -43,16 +43,16 @@ OSX = 0;
 
 
 DIR_GPS = [MAIN_DIR "Ship_uway/"];  # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
-GLOB_GPS = "/seatex-gga.ACO";
+% GLOB_GPS = "/seatex-gga.ACO";  % lat = 45.31425, lon = 12.508317
 
-DIR_ATT = [MAIN_DIR "Ship_uway/"]; # pitch and roll # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
-GLOB_ATT = "/tsshrp.ACO";
+%DIR_ATT = [MAIN_DIR "Ship_uway/"]; # pitch and roll # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
+%GLOB_ATT = "/tsshrp.ACO";
 
-DIR_WIND = [MAIN_DIR "Ship_uway/"];
-GLOB_WIND = "/anemometer.ACO";# glob pattern for wind data to concatenate after DATESTR
+DIR_WIND = [MAIN_DIR "xls/"];
+GLOB_WIND = "/meteo*.xlsx";# glob pattern for wind data to concatenate after DATESTR
 
-DIR_SURF = [MAIN_DIR "Ship_uway/"];
-GLOB_SURF = "/oceanlogger.ACO";# glob pattern for wind data to concatenate after DATESTR
+DIR_SURF = [MAIN_DIR "xls/"];
+GLOB_SURF = "/meteo*.xlsx";# glob pattern for wind data to concatenate after DATESTR
 
 DIR_TEMPCORR = [MAIN_DIR "HyperSAS_config/Temperature/"];
 FN_TEMPCORR_ES = "PML_8-010-20-thermal-0258.csv";# File name of temperature correction factors and their uncertainties for ES
@@ -65,7 +65,7 @@ FN_SLCORR_LT = "223.txt";
 FN_SLCORR_LI = "222.txt";
 
 
-DIN_HSAS = [MAIN_DIR "Raw/RawExtracted/"];
+DIN_HSAS = [MAIN_DIR "SatCon_extracted/"];
 DOUT_HSAS_SUB = "Processed_TPcorrection/";
 DOUT_HSAS = [MAIN_DIR DOUT_HSAS_SUB];
 
@@ -76,17 +76,17 @@ DIN_StrayLight = [MAIN_DIR "HyperSAS_config/Straylight/"];
 DIN_Non_Linearity = [MAIN_DIR "HyperSAS_config/Non-linearity/non-linearity coefficients.xlsx"]; 
 
 #-Flags to check if do non-linearity, temperature, Straylight corrections
-FLAG_NON_LINEARITY = 0;
+FLAG_NON_LINEARITY = 1; 
 FLAG_TEMPERATURE = 1;
-FLAG_STRAY_LIGHT = 0;
+FLAG_STRAY_LIGHT = 1;
 
 #-ACS data Path
-FN_ACS = [MAIN_DIR, "ACSChl/ACStoHSAS_sentinel3a_olci_AMT28.txt"];
+FN_ACS = [MAIN_DIR, "AC-9/ACStoHSAS_sentine.txt"];
 
 # Define names of functions needed to read GPS, HDG, PITCH, ROLL, TILT
-FNC_RD_ATT = @rd_tsshrp;# function to read pitch and roll, heave
-FNC_RD_GPS = @rd_JCR_gps;# function to read lat, lon, hdg, cog_deg, sog_m2s
-FNC_RD_WIND = @rd_anemometer; # function to read wdir, wspd, airt, humid 
+% FNC_RD_ATT = @rd_tsshrp;# function to read pitch and roll, heave
+% FNC_RD_GPS = @rd_JCR_gps;# function to read lat, lon, hdg, cog_deg, sog _m2s
+FNC_RD_WIND = @rd_anemometer; # function to read wdir, wspd, airt, humid  % modify for xls
 FNC_RD_SURF = @rd_oceanloggerJCR; # function to read other met and surface data collecetd by the ship 
 
 
