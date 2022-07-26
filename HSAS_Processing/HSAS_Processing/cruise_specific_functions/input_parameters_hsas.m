@@ -84,10 +84,10 @@ FLAG_STRAY_LIGHT = 1;
 FN_ACS = [MAIN_DIR, "AC-9/ACStoHSAS_sentine.txt"];
 
 # Define names of functions needed to read GPS, HDG, PITCH, ROLL, TILT
-% FNC_RD_ATT = @rd_tsshrp;# function to read pitch and roll, heave
-% FNC_RD_GPS = @rd_JCR_gps;# function to read lat, lon, hdg, cog_deg, sog _m2s
-FNC_RD_WIND = @rd_anemometer; # function to read wdir, wspd, airt, humid  % modify for xls
-FNC_RD_SURF = @rd_oceanloggerJCR; # function to read other met and surface data collecetd by the ship 
+FNC_RD_ATT = @rd_tsshrp_FICE;# function to read pitch and roll, heave
+FNC_RD_GPS = @rd_gps_FICE;# function to read lat, lon, hdg, cog_deg, sog _m2s
+FNC_RD_WIND = @rd_anemometer_FICE; # function to read wdir, wspd, airt, humid  % modify for xls
+FNC_RD_SURF = @rd_oceanlogger_FICE; # function to read other met and surface data collecetd by the ship 
 
 
 ##########################################
