@@ -1,0 +1,34 @@
+function out = rd_trios(fn)
+
+disp(["reading file:  " fn]);
+fflush(stdout);
+
+    # get times
+        fid = fopen(fn, 'r');
+        tmp = fgetl(fid);
+        fclose(fid);
+
+        tmp_time = datenum(strtrim(strsplit(tmp, {"\#wv", " "}, true)){2}, "HH:MM:SS");
+        disp(tmp_time)
+        [y0, m0, d0, h, mi, s] = datevec(tmp_time);
+        toffset  = datenum(y0,0,0,0,0,0);
+        out.time = (datenum(strsplit(fn,"_"){end-1}, "yyyy-mm-dd")+tmp_time-toffset)';
+
+# get data
+        tmp = load(fn);
+        out.wv = tmp(:,1);
+        out.data= tmp(:,2:end);
+        disp(out.time)
+        disp(length(out.data(:,1)))
+        disp(length(out.time))
+
+    if length(out.data(:,1))!=length(out.time)
+        disp("\n\n---------Length of time array different from length of data: EXIT.\n\n")
+        
+        exit
+    endif
+
+disp("...done");
+fflush(stdout);
+
+endfunction

@@ -1,0 +1,18 @@
+# extract data to digital counts using satcon
+
+# update input_parameters_hsas.m for this cruise, including functions for reading ship's data
+
+# apply calibration coefficients (can be pre and post, or only pre)
+calibrate_hsas.m
+
+# run L0 and L1 processing (slowest part because it requires working functions to read ship's data)
+proc_L0_L1.m
+
+# run L2 processing
+proc_L2.m
+
+# plot L2 data
+amt_L2_plot.m
+
+# create netCDF files
+need to complete this
