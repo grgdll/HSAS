@@ -123,7 +123,7 @@ endif
  %here we should use functions name in input parameters to read gps data 
 	fn_gps = glob([DIR_GPS, DATESTR, GLOB_GPS]){1}; % fill with lat lon from platform
 	gps = FNC_RD_GPS(  fn_gps   );
-
+	keyboard
 	
 #----------------------------------
 ### Read TILT AND ROLL data ###
