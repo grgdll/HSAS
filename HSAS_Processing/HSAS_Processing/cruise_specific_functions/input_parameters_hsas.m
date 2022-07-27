@@ -11,8 +11,10 @@
 	DEF_YEAR = 2022;
 	
 # dates to be processed
-	DAY_START = "195"; %14 july
-	DAY_STOP = "202"; %21 july
+	%DAY_START = "195"; %14 july %AMT proc uses jday
+	%DAY_STOP = "202"; %21 july
+	DAY_START = "20220714"; %14 july % fice proc uses datestr
+	DAY_STOP = "20220721"; %21 july
 
 # cruise name
 	CRUISE = "FICE22";
@@ -78,9 +80,9 @@ DIN_StrayLight = [MAIN_DIR "HyperSAS_config/Straylight/"];
 DIN_Non_Linearity = [MAIN_DIR "HyperSAS_config/Non-linearity/non-linearity coefficients.xlsx"]; 
 
 #-Flags to check if do non-linearity, temperature, Straylight corrections
-FLAG_NON_LINEARITY = 1; 
-FLAG_TEMPERATURE = 1;
-FLAG_STRAY_LIGHT = 1;
+FLAG_NON_LINEARITY = 0; % 0: do not apply correction
+FLAG_TEMPERATURE = 0;
+FLAG_STRAY_LIGHT = 0;
 
 #-ACS data Path
 FN_ACS = [MAIN_DIR, "AC-9/ACStoHSAS_sentine.txt"];

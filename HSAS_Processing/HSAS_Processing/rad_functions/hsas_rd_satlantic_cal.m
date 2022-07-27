@@ -75,17 +75,28 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
     tmp = fgets(fid);
     iwv = 1;
     while isempty(strfind(tmp,"# Number of Dark Samples"))
+iwv 
+tmp
         tmp = strsplit(tmp); # read wavelength
-        tmp2 = strsplit(fgets(fid));  # read calibration
-        fgets(fid); # skip empty line
+        if strcmp(tmp{end-1}, 'NONE')
+        	cal.wv(iwv) = nan;
+		cal.offset(iwv) = nan;
+		cal.gain(iwv) = nan;
+		cal.int_time_wv(iwv) = nan;
+		fgets(fid);
+        else
+        	tmp2 = strsplit(fgets(fid)); # read calibration
+		fgets(fid); # skip empty line
+		% keyboard
+		cal.wv(iwv) = str2num(tmp{2});
+		cal.offset(iwv) = str2num(tmp2{1});
+		cal.gain(iwv) = str2num(tmp2{2});
+		cal.int_time_wv(iwv) = str2num(tmp2{4}); # [seconds]
 		
-        cal.wv(iwv) = str2num(tmp{2});
-        cal.offset(iwv) = str2num(tmp2{1});
-        cal.gain(iwv) = str2num(tmp2{2});
-        cal.int_time_wv(iwv) = str2num(tmp2{4}); # [seconds]
-        
-        # convert tmp back into one string
-#         tmp = strrep(cell2mat(strcat(tmp, '-')), '-', ' ')
+		# convert tmp back into one string
+	        # tmp = strrep(cell2mat(strcat(tmp, '-')), '-', ' ')
+	endif
+	
         tmp = fgets(fid);
         
 #         if strfind(tmp, '1142.23 ')

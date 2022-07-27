@@ -8,13 +8,12 @@ graphics_toolkit("gnuplot");
 
 warning off #Turn off warnings
 
-addpath("../JCR")
-addpath("../JCR/cruise_specific_functions")
-addpath("../JCR/rad_functions/")
-addpath("../JCR/rad_functions/intwv")
-addpath("../JCR/rad_functions/DISTRIB_fQ_with_Raman")
-addpath("../JCR/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa")
 
+addpath(strcat(pwd, "/cruise_specific_functions")) %assumes code is run from ../HSAS_Processing
+addpath(strcat(pwd, "/rad_functions/"))
+addpath(strcat(pwd, "/rad_functions/intwv"))
+addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman"))
+addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"))
 
 # read input parameters for this cruise
 input_parameters_hsas;
@@ -72,7 +71,7 @@ for iSN = 1:length(sn)
         hold on
         subplot(121)
             plot(cal{1}.wv, cal{2}.offset./cal{1}.offset-1, [";" datestr(cal{1}.date, "yyyy/mmm/dd") "\n" datestr(cal{2}.date, "yyyy/mmm/dd") ";"])
-            ylim([-1 1]*mean(abs(cal{2}.offset./cal{1}.offset-1))*1.5)
+            % ylim([-1 1]*mean(abs(cal{2}.offset./cal{1}.offset-1))*1.5) % commented due to nan padding
             set(gca, 'ygrid', 'on', 'gridlinestyle', ':');
             hold on, plot(cal{1}.wv, cal{1}.wv*0, 'k')
             xlim([350 850])
@@ -112,15 +111,15 @@ for iSN = 1:length(sn)
             
             int_time = mean(int_time_);
             
-            if ical>1 & ~all(std(int_time_,[],1)<=eps)
-                disp('integration time has changed beytween calibrations!!!');
+            if ical>1 & (int_time_(1,20) != int_time_(2,20)) % ~all(std(int_time_,[],1)<=eps)
+                disp('integration time has changed between calibrations!!!');
                 keyboard
             endif
             
             wv = mean(wv_);
             
-            if ical>1 & ~all(std(wv_,[],1)<=eps)
-                disp('wavelengths have changed beytween calibrations!!!');
+            if ical>1 & (wv_(1,20) != wv_(2,20))%~all(std(wv_,[],1)<=eps)
+                disp('wavelengths have changed between calibrations!!!');
                 keyboard
             endif
 			
@@ -156,33 +155,36 @@ for iSN = 1:length(sn)
 		
 	
   ####### Read non-linearity correction coefficients ##########
-  pkg load io
-  #---radiometer related to sn
-  disp('Loading Non-linearity correction coefficients....')  
-  rad_sn = cell2struct(sn,radiometers,2);
-  sn_rad = cell2struct(radiometers, sn, 2);
-  coeff_LI = xlsread(DIN_Non_Linearity,rad_sn.LI);
-  coeff_LT = xlsread(DIN_Non_Linearity,rad_sn.LT);
-  coeff_ES = xlsread(DIN_Non_Linearity,rad_sn.ES);
-  non_linearity_coeff = struct('coeff_LI',coeff_LI(:,1:2),'coeff_LT',coeff_LT(:,1:2),'coeff_ES',coeff_ES(:,1:2));	
+  if FLAG_NON_LINEARITY == 1
+	  pkg load io
+	  #---radiometer related to sn
+	  disp('Loading Non-linearity correction coefficients....')  
+	  rad_sn = cell2struct(sn,radiometers,2);
+	  sn_rad = cell2struct(radiometers, sn, 2);
+	  coeff_LI = xlsread(DIN_Non_Linearity,rad_sn.LI);
+	  coeff_LT = xlsread(DIN_Non_Linearity,rad_sn.LT);
+	  coeff_ES = xlsread(DIN_Non_Linearity,rad_sn.ES);
+	  non_linearity_coeff = struct('coeff_LI',coeff_LI(:,1:2),'coeff_LT',coeff_LT(:,1:2),'coeff_ES',coeff_ES(:,1:2));
+  endif
     
 		
   #----Read Straylight Distribution Matrix
-  disp('Loading StrayLight Distribution Matrix....')  
-  sensor_id = sn{iSN};
-  if sn_rad.(sensor_id) == 'ES'
-  fn=[DIR_SLCORR,FN_SLCORR_ES];
-  end
-  if sn_rad.(sensor_id) == 'LI'
-  fn=[DIR_SLCORR,FN_SLCORR_LI];
-  end
-  if sn_rad.(sensor_id) == 'LT'
-  fn=[DIR_SLCORR,FN_SLCORR_LT];
-  end
+   if FLAG_STRAY_LIGHT == 1
+	  disp('Loading StrayLight Distribution Matrix....')  
+	  sensor_id = sn{iSN};
+	  if sn_rad.(sensor_id) == 'ES'
+	  fn=[DIR_SLCORR,FN_SLCORR_ES];
+	  end
+	  if sn_rad.(sensor_id) == 'LI'
+	  fn=[DIR_SLCORR,FN_SLCORR_LI];
+	  end
+	  if sn_rad.(sensor_id) == 'LT'
+	  fn=[DIR_SLCORR,FN_SLCORR_LT];
+	  end
 
-  D = load(fn);
-  D_SL = D / norm(D);
-
+	  D = load(fn);
+	  D_SL = D / norm(D);
+  endif
 		
 	###### calibrate data from this instrument
     DIN_HSAS

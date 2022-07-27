@@ -142,7 +142,7 @@ if isdir(DIR_SURF)
 	fn_surf = glob([DIR_SURF, DATESTR, GLOB_SURF]){1};
 	surf = FNC_RD_SURF(  fn_surf   ); % 
 endif
-	keyboard
+	
 
 #---------------------------------
 ####### Read non-linearity correction coefficients ##########
@@ -176,9 +176,10 @@ if strcmp(INSTRUMENT, 'hsas')
 		
  	   # read raw data
 		% fn = glob( [din fnbase "*" file_ext{irad} sn{irad} "*dat"] );
+		[din fnbase "*-[0-2]*" file_ext{irad} sn{irad} "*dat"]
 		fn = glob( [din fnbase "*-[0-2]*" file_ext{irad} sn{irad} "*dat"] );  ####################################################
 		rad.raw = hsas_rd_many(sn_rad, fn, VBS); 
-
+keyboard
     
  	   # correct for dark counts
  	   	rad.raw_nodk = correct_dk(sn_rad, rad.raw, VBS); 
