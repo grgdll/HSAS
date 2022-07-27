@@ -118,9 +118,7 @@ endif
 
 
 #----------------------------------
-### Read GPS data ###
-#
- %here we should use functions name in input parameters to read gps data 
+### Read GPS data ### 
 	fn_gps = glob([DIR_GPS, DATESTR, GLOB_GPS]){1}; % fill with lat lon from platform
 	gps = FNC_RD_GPS(  fn_gps   );
 	
@@ -129,24 +127,22 @@ endif
 ### Read TILT AND ROLL data ###
 	% fn_ths = glob([DIR_ATT, DATESTR2, GLOB_ATT]){1};
 	% ths = FNC_RD_ATT(  fn_ths   );
-	
 	% ths.tilt = cmp_tilt(ths.roll, ths.pitch); # fill with tilt =0
 	
 	
 #----------------------------------
 ### Read WIND data ###
-# here we should use functions name in input parameters to read gps data 
 	fn_wind = glob([DIR_WIND, DATESTR, GLOB_WIND]){1}; % file name of wind xlsx 
 	wind = FNC_RD_WIND(  fn_wind   ); % wind data are not in utc - check bias correction in xls file
-	keyboard
+	
+	
 #----------------------------------
-### Read other met and surface data ###
-# here we should use functions name in input parameters to read gps data 
-if exist(DIR_SURF)
-	fn_surf = glob([DIR_SURF, DATESTR2, GLOB_SURF]){1};
-	surf = FNC_RD_SURF(  fn_surf   ); % similar to wind
+### Read other met and surface data ### 
+if isdir(DIR_SURF)
+	fn_surf = glob([DIR_SURF, DATESTR, GLOB_SURF]){1};
+	surf = FNC_RD_SURF(  fn_surf   ); % 
 endif
-
+	keyboard
 
 #---------------------------------
 ####### Read non-linearity correction coefficients ##########

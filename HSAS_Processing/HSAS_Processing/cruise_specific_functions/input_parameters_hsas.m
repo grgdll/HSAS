@@ -51,8 +51,10 @@ GLOB_GPS = "/*fice22_metadata.xlsx";  % lat = 45.31425, lon = 12.508317
 DIR_WIND = [MAIN_DIR "xls/"];
 GLOB_WIND = "/*meteo.xlsx";# glob pattern for wind data to concatenate after DATESTR
 
-DIR_SURF = [MAIN_DIR "xls/"];
-GLOB_SURF = "/*meteo.xlsx";# glob pattern for surf data to concatenate after DATESTR
+%DIR_SURF = [MAIN_DIR "xls/"]; % temp and humidity stored in wind struct for FICE
+%GLOB_SURF = "/*meteo.xlsx";# glob pattern for surf data to concatenate after DATESTR
+DIR_SURF = [];
+
 
 DIR_TEMPCORR = [MAIN_DIR "HyperSAS_config/Temperature/"];
 FN_TEMPCORR_ES = "PML_8-010-20-thermal-0258.csv";# File name of temperature correction factors and their uncertainties for ES

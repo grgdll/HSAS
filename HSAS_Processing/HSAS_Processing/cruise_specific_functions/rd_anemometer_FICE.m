@@ -9,9 +9,12 @@ function d = rd_anemometer_FICE(fn)
 
     d.wspd = data(:,4); # [m/s] - median in previous 10 mins
     
-    d.wdir = data(:,3) ; # azimuth from N [degrees] - median in previous 10 mins
+    d.wdir = data(:,3); # azimuth from N [degrees] - median in previous 10 mins
 
-
+    d.airt = data(:,9); % [deg C] air temp - median in previous 10 mins
+    
+    d.humid = data(:,11); % [%] humidity - median in previous 10 mins
+    
 endfunction
 
 
