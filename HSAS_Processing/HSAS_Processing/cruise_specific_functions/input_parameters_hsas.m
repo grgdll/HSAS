@@ -11,7 +11,7 @@
 	DEF_YEAR = 2022;
 	
 # dates to be processed
-	DAY_START = "194"; %13 july
+	DAY_START = "195"; %14 july
 	DAY_STOP = "202"; %21 july
 
 # cruise name
@@ -42,17 +42,17 @@ OSX = 0;
 % DOUT_SUFFIX = "./Processed_final/"; # this is the supphix that is appended to the DATA_PATH dir to define the directory for the output processed files
 
 
-DIR_GPS = [MAIN_DIR "Ship_uway/"];  # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
-% GLOB_GPS = "/seatex-gga.ACO";  % lat = 45.31425, lon = 12.508317
+DIR_GPS = [MAIN_DIR "xls/"]  # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
+GLOB_GPS = "/*fice22_metadata.xlsx";  % lat = 45.31425, lon = 12.508317
 
 %DIR_ATT = [MAIN_DIR "Ship_uway/"]; # pitch and roll # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
 %GLOB_ATT = "/tsshrp.ACO";
 
 DIR_WIND = [MAIN_DIR "xls/"];
-GLOB_WIND = "/meteo*.xlsx";# glob pattern for wind data to concatenate after DATESTR
+GLOB_WIND = "/*meteo.xlsx";# glob pattern for wind data to concatenate after DATESTR
 
 DIR_SURF = [MAIN_DIR "xls/"];
-GLOB_SURF = "/meteo*.xlsx";# glob pattern for wind data to concatenate after DATESTR
+GLOB_SURF = "/*meteo.xlsx";# glob pattern for surf data to concatenate after DATESTR
 
 DIR_TEMPCORR = [MAIN_DIR "HyperSAS_config/Temperature/"];
 FN_TEMPCORR_ES = "PML_8-010-20-thermal-0258.csv";# File name of temperature correction factors and their uncertainties for ES

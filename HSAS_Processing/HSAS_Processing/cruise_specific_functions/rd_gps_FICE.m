@@ -9,6 +9,10 @@ function gps = rd_gps_FICE(fn)
 
 	input_parameters_hsas;
 
+	pkg load io
+	keyboard
+	DATESTR = strsplit(fn, {'/','_'}){12};
+    	[Data, Headers] = xlsread(fn)
 
 	gps = rd_seatex_gga(  fn   );
 

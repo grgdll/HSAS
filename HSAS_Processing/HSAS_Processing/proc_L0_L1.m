@@ -37,7 +37,7 @@ input_parameters_hsas;
 
 # Get arguments passed to function: INSTRUMENT switch is first argument xargs comes after
 %fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED 
-fnin = {"20220713"}; % tj - TEMPORARY HARD CODING - 1st day of FICE2022
+fnin = {"20220714"}; % tj - TEMPORARY HARD CODING - 1st day of FICE2022
 % fnin = {"20150916"};
 % fnin = {"hsas", ...
 %   		"20191017", ...
@@ -120,9 +120,9 @@ endif
 #----------------------------------
 ### Read GPS data ###
 #
-# here we should use functions name in input parameters to read gps data 
-	%fn_gps = glob([DIR_GPS, DATESTR2, GLOB_GPS]){1} % fill with lat lon from platform
-	%gps = FNC_RD_GPS(  fn_gps   );
+ %here we should use functions name in input parameters to read gps data 
+	fn_gps = glob([DIR_GPS, DATESTR, GLOB_GPS]){1}; % fill with lat lon from platform
+	gps = FNC_RD_GPS(  fn_gps   );
 
 	
 #----------------------------------
