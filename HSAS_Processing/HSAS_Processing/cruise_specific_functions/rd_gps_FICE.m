@@ -10,10 +10,22 @@ function gps = rd_gps_FICE(fn)
 	input_parameters_hsas;
 
 	pkg load io
-	keyboard
-	DATESTR = strsplit(fn, {'/','_'}){12};
-    	[Data, Headers] = xlsread(fn)
 
+	DATESTR = strsplit(fn, {'/','_'}){12};
+    	[data, headers] = xlsread(fn, DATESTR);
+    	station_number = data(:,1);
+    	id = headers(2:end,2);
+    	orientation = headers(2:end,3);
+    	phi = nan(length(orientation),1);
+    	for ist = 1:length(orientation)
+    		tmp = strsplit(orientation{ist},' ');
+    		phi(ist) = str2num(tmp{1});
+    		if strcmp(tmp{2}, 'sx') % sensor with azmiuth to left of sun defined as -ve, right azimuth as +ve
+    			phi(ist) = -phi(ist);
+    		endif 
+    	endfor
+    		
+	keyboard
 	gps = rd_seatex_gga(  fn   );
 
 	# now read speed and course over ground
