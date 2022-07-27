@@ -1,22 +1,19 @@
 function gps = rd_gps_FICE(fn)
-% This is a modified GCPS function for the FICE 2022 deployment - it will require replacement of read_seatex_gga
+% This is a modified GPS function for the FICE 2022 deployment - it reads meta data from an xls spreadsheet.
+% Lat-lon are constant; data fields not present (but are usually in ship GPS files) are assigned NaN
+% The relative solar azimuth (phi) is read directly
 
-# function gps = rd_JCR_gps(fn)
-# read gps data from JCR's underway data stream
-# this is thought to be similar to rd_DY_gps.m, but neews to read two different files for JCR
-#
-# fn is the path to the seatex-gga.ACO file
 
 	input_parameters_hsas;
 
 	pkg load io
 
 	DATESTR = strsplit(fn, {'/','_'}){12};
-    	[data, headers] = xlsread(fn, DATESTR);
-    	station_number = data(:,1);
-    	id = headers(2:end,2);
+    	[data, headers] = xlsread(fn, DATESTR); % DATESTR is used to pass sheet number
+    	station_number = data(:,1); 
+    	id = headers(2:end,2); % Identifier for metadata record
     	orientation = headers(2:end,3);
-    	phi = nan(length(orientation),1);
+    	phi = nan(length(orientation),1); % phi is relative (signed) sensor azimuth w.r.t. sun
     	for ist = 1:length(orientation)
     		tmp = strsplit(orientation{ist},' ');
     		phi(ist) = str2num(tmp{1});
@@ -26,7 +23,7 @@ function gps = rd_gps_FICE(fn)
     	endfor
     		
 	keyboard
-	gps = rd_seatex_gga(  fn   );
+	# gps = rd_seatex_gga(  fn   );
 
 	# now read speed and course over ground
 	fn2 = strrep(fn, "gga", "vtg");
