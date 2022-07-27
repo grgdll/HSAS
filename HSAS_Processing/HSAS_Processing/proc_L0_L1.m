@@ -123,7 +123,7 @@ endif
  %here we should use functions name in input parameters to read gps data 
 	fn_gps = glob([DIR_GPS, DATESTR, GLOB_GPS]){1}; % fill with lat lon from platform
 	gps = FNC_RD_GPS(  fn_gps   );
-	keyboard
+	
 	
 #----------------------------------
 ### Read TILT AND ROLL data ###
@@ -136,9 +136,9 @@ endif
 #----------------------------------
 ### Read WIND data ###
 # here we should use functions name in input parameters to read gps data 
-	fn_wind = strcat([DIR_WIND, 'meteo_', DATESTR, '.xlsx']); % file name of wind xlsx 
+	fn_wind = glob([DIR_WIND, DATESTR, GLOB_WIND]){1}; % file name of wind xlsx 
 	wind = FNC_RD_WIND(  fn_wind   ); % wind data are not in utc - check bias correction in xls file
-
+	keyboard
 #----------------------------------
 ### Read other met and surface data ###
 # here we should use functions name in input parameters to read gps data 
