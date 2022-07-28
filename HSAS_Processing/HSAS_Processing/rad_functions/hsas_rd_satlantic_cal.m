@@ -75,24 +75,23 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
     tmp = fgets(fid);
     iwv = 1;
     while isempty(strfind(tmp,"# Number of Dark Samples"))
-iwv 
-tmp
         tmp = strsplit(tmp); # read wavelength
         if strcmp(tmp{end-1}, 'NONE')
         	cal.wv(iwv) = nan;
 		cal.offset(iwv) = nan;
 		cal.gain(iwv) = nan;
 		cal.int_time_wv(iwv) = nan;
-		fgets(fid);
-        else
+		tmp2 = strsplit(fgets(fid))
+		if isempty(tmp2{1})== 0	# skips extra line for 464 sensor cal file format
+			fgets(fid)
+		endif
+        elseif strcmp(tmp{end-1}, 'OPTIC3')
         	tmp2 = strsplit(fgets(fid)); # read calibration
-		fgets(fid); # skip empty line
-		% keyboard
 		cal.wv(iwv) = str2num(tmp{2});
 		cal.offset(iwv) = str2num(tmp2{1});
 		cal.gain(iwv) = str2num(tmp2{2});
 		cal.int_time_wv(iwv) = str2num(tmp2{4}); # [seconds]
-		
+		fgets(fid)
 		# convert tmp back into one string
 	        # tmp = strrep(cell2mat(strcat(tmp, '-')), '-', ' ')
 	endif
