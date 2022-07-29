@@ -151,43 +151,48 @@ for iSN = 1:length(sn)
         
         
 		
-
-		
+ % Read serial number and sensor type
+	rad_sn = cell2struct(sn,radiometers,2);
+        sn_rad = cell2struct(radiometers, sn, 2);
+        sensor_id = sn{iSN};	
 	
   ####### Read non-linearity correction coefficients ##########
   if FLAG_NON_LINEARITY == 1
 	  pkg load io
 	  #---radiometer related to sn
 	  disp('Loading Non-linearity correction coefficients....')  
-	  rad_sn = cell2struct(sn,radiometers,2);
-	  sn_rad = cell2struct(radiometers, sn, 2);
 	  coeff_LI = xlsread(DIN_Non_Linearity,rad_sn.LI);
 	  coeff_LT = xlsread(DIN_Non_Linearity,rad_sn.LT);
 	  coeff_ES = xlsread(DIN_Non_Linearity,rad_sn.ES);
 	  non_linearity_coeff = struct('coeff_LI',coeff_LI(:,1:2),'coeff_LT',coeff_LT(:,1:2),'coeff_ES',coeff_ES(:,1:2));
+  else
+  	 non_linearity_coeff = struct('coeff_LI',nan,'coeff_LT',nan,'coeff_ES',nan);
   endif
     
 		
   #----Read Straylight Distribution Matrix
    if FLAG_STRAY_LIGHT == 1
 	  disp('Loading StrayLight Distribution Matrix....')  
-	  sensor_id = sn{iSN};
+
 	  if sn_rad.(sensor_id) == 'ES'
-	  fn=[DIR_SLCORR,FN_SLCORR_ES];
-	  end
+	 	fn = [DIR_SLCORR, FN_SLCORR_ES];
+	  endif
 	  if sn_rad.(sensor_id) == 'LI'
-	  fn=[DIR_SLCORR,FN_SLCORR_LI];
-	  end
+	  	fn = [DIR_SLCORR, FN_SLCORR_LI];
+	  endif
 	  if sn_rad.(sensor_id) == 'LT'
-	  fn=[DIR_SLCORR,FN_SLCORR_LT];
-	  end
+	  	fn = [DIR_SLCORR, FN_SLCORR_LT];
+	  endif
 
 	  D = load(fn);
 	  D_SL = D / norm(D);
+  else
+   	 D = D_SL = nan;
   endif
+  
 		
 	###### calibrate data from this instrument
-    DIN_HSAS
+   
 	days = glob([DIN_HSAS "*"]); # read all days
 	istart = find(cellfun(@isempty, strfind(days, DAY_START))==0); # find first day to be processed
 	istop = find(cellfun(@isempty, strfind(days, DAY_STOP))==0); # find last day to be processed
@@ -196,7 +201,7 @@ for iSN = 1:length(sn)
 		disp('cannot find start or stop day');
 		keyboard
 	endif
- 
+
  
 	
 	# loop over the days that need to be processed
