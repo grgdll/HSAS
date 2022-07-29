@@ -125,9 +125,10 @@ endif
 	
 #----------------------------------
 ### Read TILT AND ROLL data ###
-	% fn_ths = glob([DIR_ATT, DATESTR2, GLOB_ATT]){1};
-	% ths = FNC_RD_ATT(  fn_ths   );
-	% ths.tilt = cmp_tilt(ths.roll, ths.pitch); # fill with tilt =0
+	 %fn_ths = glob([DIR_ATT, DATESTR, GLOB_ATT]){1}; AMT - where tilt and roll is present
+	 ths = FNC_RD_ATT(DATESTR);
+	 ths.tilt = [0, 0]; %[deg]
+	% ths.tilt = cmp_tilt(ths.roll, ths.pitch); # fill with tilt =0 AMT projection method
 	
 	
 #----------------------------------
@@ -140,7 +141,7 @@ endif
 ### Read other met and surface data ### 
 if isdir(DIR_SURF)
 	fn_surf = glob([DIR_SURF, DATESTR, GLOB_SURF]){1};
-	surf = FNC_RD_SURF(  fn_surf   ); % 
+	surfdata = FNC_RD_SURF(  fn_surf   ); % surf in older versions
 endif
 	
 
@@ -388,11 +389,11 @@ if strcmp(INSTRUMENT,'hsas')
 
    # add the apparent wind data
 
-	L0.appwind_spd = interp1(wind.time, wind.ws, L0.time, TIME_INT_METHOD); # [m/s]
+	L0.appwind_spd = interp1(wind.time, wind.wspd, L0.time, TIME_INT_METHOD); # [m/s] % may be wind.ws for different rd wind functions
 	L0.appwind_dir = interp1(wind.time, wind.wdir, L0.time, TIME_INT_METHOD); # [degrees]
 	
-	if isvarname('surf')
-		fld = fieldnames(surf);
+	if exist('surfdata')
+		fld = fieldnames(surfdata);
 		for ifld = 1:length(fld)
 			L0.surf_met.(fld{ifld}) = interp1(surf.time, surf.(fld{ifld}), L0.time, TIME_INT_METHOD); # [degC]
 		endfor
@@ -441,7 +442,7 @@ endif
 
 # Tilt filter
 %
-% max_tilt_accepted = 50;
+% max_tilt_accepted = 50; % point to begin
 
 L1.hdr.max_tilt_accepted = MAX_TILT_ACCEPTED_L1;
 

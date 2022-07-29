@@ -50,8 +50,10 @@ OSX = 0;
 DIR_GPS = [MAIN_DIR "xls/"]  # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
 GLOB_GPS = "/*fice22_metadata.xlsx";  % lat = 45.31425, lon = 12.508317
 
-%DIR_ATT = [MAIN_DIR "Ship_uway/"]; # pitch and roll # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
-%GLOB_ATT = "/tsshrp.ACO";
+% case of AMT cruise
+% DIR_ATT = [MAIN_DIR "Ship_uway/"]; # pitch and roll # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
+% GLOB_ATT = "/tsshrp.ACO"; 
+% case of FICE22 - notheing needed;
 
 DIR_WIND = [MAIN_DIR "xls/"];
 GLOB_WIND = "/*meteo.xlsx";# glob pattern for wind data to concatenate after DATESTR
