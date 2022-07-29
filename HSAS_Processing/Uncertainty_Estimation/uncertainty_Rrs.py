@@ -7,7 +7,7 @@ import glob
 import datetime
 from pyephem_sunpath.sunpath import sunpos
 
-class uncertainty(object):
+class uncertainty(object): # tj -this will need editing for fice
     def __init__(self,cruise):
         self.in_dir_main = "" # main directory of your input data 
         self.out_file_main = " " # main directory of your output data
@@ -43,7 +43,7 @@ class uncertainty(object):
 
 
 
-    def read_rho_LUT(self,rho_LUT_fn):
+    def read_rho_LUT(self,rho_LUT_fn): # tj - suspected to be old version
         f = open(rho_LUT_fn,'r')
         rho_LUT = {}
         wind_speed = []
@@ -77,7 +77,7 @@ class uncertainty(object):
                 self.Cal_ES = io.loadmat(fn)
 
 
-    def load(self,dir):
+    def load(self,dir): # tj - days in L98 may need chnaging to 365
         fn_CalFile = glob.glob(self.in_dir_CalFile + '/' + "mean_*.mat")
         self.load_calfile(fn_CalFile)
         fn_L0 = glob.glob(self.in_dir_L0 + dir + '/' + "*Hsas_L0*.mat")
@@ -111,7 +111,7 @@ class uncertainty(object):
         self.L2['L2'].Hsas_dt = np.array(Hsas_dt)
 
 
-    def get_uncerOfrho_geometry(self,wsp,sza,vza,vaa,delta_vza,delta_vaa,Is_showFig=False):
+    def get_uncerOfrho_geometry(self,wsp,sza,vza,vaa,delta_vza,delta_vaa,Is_showFig=False): # tj - suspected to be old version
         inx = (np.abs(self.rho_LUT['wsp'] - wsp) + np.abs(self.rho_LUT['sa'] - sza)).argmin()
         key_name = list(self.rho_LUT)[inx]
         print(key_name)
@@ -774,7 +774,7 @@ class uncertainty(object):
         return sig_rrs, rrs_lt_term, rrs_li_term, rrs_es_term, rrs_rho_term, rrs_delta_L_term,c_lt_li_term, c_lt_es_term , c_li_es_term, \
                c_li_rho_term, c_lt_rho_term, c_li_dlt_term, c_lt_dlt_term, c_rho_dlt_term
 
-    def rho_unc(self,clearsky, clearsky_dt, L2_Hsas_dt):
+    def rho_unc(self,clearsky, clearsky_dt, L2_Hsas_dt): # tj - called within next function rho values may need updating for FICE?
         x0 = [a.total_seconds() for a in L2_Hsas_dt - clearsky_dt[0].to_pydatetime()]
         x = [a.total_seconds() for a in clearsky_dt - clearsky_dt[0].to_pydatetime()]
         L2_clearsky = np.interp(x0, x, clearsky)
@@ -801,7 +801,7 @@ class uncertainty(object):
 
     def perform_unc_summation(self):
         t_in = self.L2
-        wv = self.L2['L2'].wv[25:176]
+        wv = self.L2['L2'].wv[25:176] # tj - suspected to be hardcoded
 
         #----Chla estimation with OC4
         Rrs = self.L2['L2'].Rrs.data
