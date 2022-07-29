@@ -62,7 +62,7 @@ dout_L1   	= [DOUT_HSAS "L1/" DATESTR "/" ];
 %Y0     	= datenum(DEF_YEAR, 1, 1);
 %[Y, M, D] = datevec(datenum(DATESTR, "yyyymmdd"));
 
-fnbase 	= [num2str(DEF_YEAR) '-' doy];
+
 YYYY = sprintf("%4u", DEF_YEAR);
 [M,D] = jday2mmdd(DEF_YEAR,str2num(doy)); % CODE currently breaks here
 MM = sprintf("%02u", M);
@@ -92,9 +92,9 @@ if strcmp(INSTRUMENT,'hsas')
 %    [Y,M,D]= datevec(dbase, "yyyy-mm-dd");
 %    Y0     = datenum(Y,1,1);
 %    doy    = datenum(Y,M,D) - Y0 + 1;
-%    fnbase = strsplit(fnin{4}, {"/","."}){end-1};# <<<<<<<<<<< CHECK THIS
+%    FNBASE = strsplit(fnin{4}, {"/","."}){end-1};# <<<<<<<<<<< CHECK THIS
 %    in_tag = 'Trios';
-%    inst_name = strsplit(fnbase,"_"){2};# <<<<<<<<<<< CHECK THIS
+%    inst_name = strsplit(FNBASE,"_"){2};# <<<<<<<<<<< CHECK THIS
 %
 % elseif strcmp(INSTRUMENT,'triosIW')
 %    inst_type = "TRIOS";
@@ -106,9 +106,9 @@ if strcmp(INSTRUMENT,'hsas')
 %    [Y,M,D]= datevec(dbase, "yyyy-mm-dd");
 %    Y0     = datenum(Y,1,1);
 %    doy    = datenum(Y,M,D) - Y0 + 1;
-%    fnbase = strsplit(fnin{4}, {"/","."}){end-1};# <<<<<<<<<<< CHECK THIS
+%    FNBASE = strsplit(fnin{4}, {"/","."}){end-1};# <<<<<<<<<<< CHECK THIS
 %    in_tag = 'Trios';
-%    inst_name = strsplit(fnbase,"_"){2};# <<<<<<<<<<< CHECK THIS
+%    inst_name = strsplit(FNBASE,"_"){2};# <<<<<<<<<<< CHECK THIS
 
 else 
 	keyboard
@@ -175,11 +175,14 @@ if strcmp(INSTRUMENT, 'hsas')
 		sn_rad = { sn{irad}, radiometers{irad} };
 		
  	   # read raw data
-		% fn = glob( [din fnbase "*" file_ext{irad} sn{irad} "*dat"] );
-		[din fnbase "*-[0-2]*" file_ext{irad} sn{irad} "*dat"]
-		fn = glob( [din fnbase "*-[0-2]*" file_ext{irad} sn{irad} "*dat"] );  ####################################################
+		% fn = glob( [din FNBASE "*" file_ext{irad} sn{irad} "*dat"] );
+		[din FNBASE "*-[0-2]*" file_ext{irad} sn{irad} "*dat"]
+		%fn = glob( [din FNBASE "*-[0-2]*" file_ext{irad} sn{irad} "*dat"] ); AMT cruise version
+		fn = glob( [din FNBASE "*" file_ext{irad} sn{irad} "*dat"] );
+		 ####################################################
+		
 		rad.raw = hsas_rd_many(sn_rad, fn, VBS); 
-keyboard
+
     
  	   # correct for dark counts
  	   	rad.raw_nodk = correct_dk(sn_rad, rad.raw, VBS); 
@@ -220,7 +223,7 @@ endif
 	   % sn = {"82C1", "ES"};
 
 	   # read raw ES data
-	   fn = glob( [din fnbase "*H[ES][DE]" sn{1} "*dat"] );# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CHECK THIS
+	   fn = glob( [din FNBASE "*H[ES][DE]" sn{1} "*dat"] );# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CHECK THIS
 	   ES.raw = rd_trios(fnin{4});# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CHECK THIS
 	   ES.raw.sn = sn{1};# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< CHECK THIS
 

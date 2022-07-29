@@ -35,6 +35,9 @@
 # main dir
 MAIN_DIR = "/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/";   
 
+% basename for calibrated files 
+%FNBASE	= [num2str(DEF_YEAR) '-' doy] % filename base for AMT crusies: doy variable in proc1
+FNBASE	= ['FRM4SOC2_FICE22_PML_'] %
 
 ### INSTRUMENT serial numbers for trios (at least) are hardcoded
 ### SINGLE HARDCODED PATH REMAINS TO THS DATA BELOW AND DEF_YEAR IS HARDCODED ###
@@ -69,7 +72,7 @@ FN_SLCORR_LT = "223.txt";
 FN_SLCORR_LI = "222.txt";
 
 
-DIN_HSAS = [MAIN_DIR "SatCon_extracted/"];
+DIN_HSAS = [MAIN_DIR "Raw/RawExtracted/"];
 DOUT_HSAS_SUB = "Processed_TPcorrection/";
 DOUT_HSAS = [MAIN_DIR DOUT_HSAS_SUB];
 
