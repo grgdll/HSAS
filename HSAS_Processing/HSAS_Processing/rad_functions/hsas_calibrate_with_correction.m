@@ -21,7 +21,7 @@ data = (L_CountsLightDat - L_CalDarkDat);
 
 #---- nonlinear correction
 if FLAG_NON_LINEARITY == 1
-data = correct_non_linearity_at_Cal(rad_sn, sn_rad, sensor_id, non_linearity_coeff,data,wl);
+	data = correct_non_linearity_at_Cal(rad_sn, sn_rad, sensor_id, non_linearity_coeff,data,wl);
 endif
 
 #---Stray Light Correction

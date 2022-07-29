@@ -77,10 +77,14 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
     while isempty(strfind(tmp,"# Number of Dark Samples"))
         tmp = strsplit(tmp); # read wavelength
         if strcmp(tmp{end-1}, 'NONE')
-        	cal.wv(iwv) = nan;
+        	cal.wv(iwv) = nan; % some previous insturuments have used nan-padding
 		cal.offset(iwv) = nan;
 		cal.gain(iwv) = nan;
 		cal.int_time_wv(iwv) = nan;
+		%cal.wv(iwv) = [];
+		%cal.offset(iwv) = [];
+		%cal.gain(iwv) = [];
+		%cal.int_time_wv(iwv) = [];
 		tmp2 = strsplit(fgets(fid));
 		if isempty(tmp2{1})== 0	# skips extra line for 464 sensor cal file format
 			fgets(fid);
@@ -94,6 +98,7 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
 		fgets(fid);
 		# convert tmp back into one string
 	        # tmp = strrep(cell2mat(strcat(tmp, '-')), '-', ' ')
+	 	
 	endif
 	
         tmp = fgets(fid);
@@ -107,8 +112,16 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
         
     endwhile
    
-	
-	
+   	% required from some Tartu cal formats (2027, 2054)
+   	if ~strcmp(cal.sn,'0464') 
+		inan = find(isnan(cal.wv)); 
+		cal.wv(inan) = [];
+		cal.offset(inan) = [];
+		cal.gain(inan) = [];
+		cal.int_time_wv(inan) = [];
+	endif
+
+   	
 # If there is no used_pixel input, then use all pixels
     if (nargin == 1)
         used_pixels = 1:length(cal.wv);	

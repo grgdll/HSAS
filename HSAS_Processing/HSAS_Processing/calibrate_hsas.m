@@ -187,9 +187,10 @@ for iSN = 1:length(sn)
 	  D = load(fn);
 	  D_SL = D / norm(D);
   else
-   	 D = D_SL = nan;
-  endif
+  	 D = D_SL = nan;
+ endif
   
+
 		
 	###### calibrate data from this instrument
    
