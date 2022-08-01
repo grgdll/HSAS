@@ -18,7 +18,7 @@ pkg load nan
  
     time_window = round(time_window);
     R = slidefun('min', time_window, x,'central');
-    iLt = find(x==R)';
+    iLt = find(x==R)'; %location of extracted data
     L2.iLt = iLt;
     
     
@@ -87,10 +87,11 @@ pkg load nan
         L2.gps.time = L1_f.gps.time(ifilt,:);
         L2.gps.lat = L1_f.gps.lat(ifilt,:);
         L2.gps.lon = L1_f.gps.lon(ifilt,:);
-        L2.gps.phi = L1_f.gps.phi(ifilt,:)
         L2.gps.hdg = L1_f.gps.hdg(ifilt,:);
         L2.gps.sog_m2s = L1_f.gps.sog_m2s(ifilt,:);
         L2.gps.cog_deg = L1_f.gps.cog_deg(ifilt,:);
+        
+        L2.phi = L1_f.phi(ifilt,:); % spearate from gps struct
 
         if isfield(L1_f, 'oceanlogger')
 keyboard

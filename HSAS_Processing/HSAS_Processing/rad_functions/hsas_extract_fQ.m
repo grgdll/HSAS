@@ -1,4 +1,5 @@
 function L2 = hsas_extract_fQ(L2, alg)
+% inner function (hsas_fq_ratio) must have absolute  values of phi as arguement 
 
     warning off
     addpath ../lib
@@ -16,11 +17,11 @@ function L2 = hsas_extract_fQ(L2, alg)
         if L2.conf.used_acs == true & any(~isnan(L2.chl_estimated)); # we use ACS Chl instead
             disp('ACS Chl used here')
             fflush(stdout);
-            [L2.fQs0_fQs, L2.fQ0_fQs0, L2.fQs0, L2.fQs, L2.fQ0, L2.wv_ref] = hsas_fQ_ratio(L2.wv, L2.sza, L2.chl_estimated, L2.vza, L2.phi, foQ, PLOT=false, TEST=false);
+            [L2.fQs0_fQs, L2.fQ0_fQs0, L2.fQs0, L2.fQs, L2.fQ0, L2.wv_ref] = hsas_fQ_ratio(L2.wv, L2.sza, L2.chl_estimated, L2.vza, abs(L2.phi), foQ, PLOT=false, TEST=false);
         elseif isfield(L2, "chl_estimated");# case for which we have chl data available          
             disp("abbiamo chl_estimated");
             fflush(stdout);
-            [L2.fQs0_fQs, L2.fQ0_fQs0, L2.fQs0, L2.fQs, L2.fQ0, L2.wv_ref] = hsas_fQ_ratio(L2.wv, L2.sza, L2.chl_estimated, L2.vza, L2.phi, foQ, PLOT=false, TEST=false);
+            [L2.fQs0_fQs, L2.fQ0_fQs0, L2.fQs0, L2.fQs, L2.fQ0, L2.wv_ref] = hsas_fQ_ratio(L2.wv, L2.sza, L2.chl_estimated, L2.vza, abs(L2.phi), foQ, PLOT=false, TEST=false);
         else
             # case for which we do not have chl data available and we iteratively estimate chl and fQ
 
@@ -51,7 +52,7 @@ function L2 = hsas_extract_fQ(L2, alg)
 
   
                     #2) estrai fQis
-                        [L2.fQs0_fQs(i2p,:), L2.fQ0_fQs0(i2p,:), L2.fQs0(i2p,:), L2.fQs(i2p,:), L2.fQ0(i2p,:), L2.wv_ref] = hsas_fQ_ratio(L2.wv, L2.sza(i2p,:), L2.chl_estimated(i2p,:), L2.vza(i2p,:), L2.phi(i2p,:), foQ, PLOT=false, TEST=false);
+                        [L2.fQs0_fQs(i2p,:), L2.fQ0_fQs0(i2p,:), L2.fQs0(i2p,:), L2.fQs(i2p,:), L2.fQ0(i2p,:), L2.wv_ref] = hsas_fQ_ratio(L2.wv, L2.sza(i2p,:), L2.chl_estimated(i2p,:), L2.vza(i2p,:), abs(L2.phi(i2p,:)), foQ, PLOT=false, TEST=false);
 
                     #3) compute LWN/Eo (exact normalized remote-sensing reflectance)
 #                        LWN2E0.data = L2.Lw.data.*L2.R0_R.*L2.fQs0_fQs.*1./L2.instr.Es.avg.*L2.fQ0_fQs0;
@@ -72,7 +73,7 @@ function L2 = hsas_extract_fQ(L2, alg)
                                 fflush(stdout);
                                 break
                             endif
-                            keyboard
+                            
                 endwhile                
             else
                 [L2.fQs0_fQs, L2.fQ0_fQs0, L2.fQs0, L2.fQs, L2.fQ0, L2.wv_ref, L2.chl_estimated] = deal([]);

@@ -252,7 +252,6 @@ endif
 % endif
 
 # Compute relative azimuth between sensor and sun (phi)
-keyboard
 if ~isfield(L1_f,'phi') % case of amt cruise
 	L2.phi = L1_f.phi = L2.vaa - L2.saa;
 	L2.phi(L2.phi>180) = L1_f.phi(L1_f.phi>180) = abs(360-abs(L2.phi(L2.phi>180))); # this is because the phi-axis of the fQ table ranges from 0 to 180.

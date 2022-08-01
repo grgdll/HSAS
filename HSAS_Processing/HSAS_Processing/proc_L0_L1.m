@@ -308,6 +308,7 @@ else
    L0.time = LT.raw_intwv.time;
 endif
 
+
 #----------------------------------
 # interpolate all data to LT time step
 
@@ -441,7 +442,7 @@ endif
 ### Create L1 structure ###
 
 # Tilt filter
-
+keyboard
 if strcmp(INSTRUMENT,'triosIW')
    L1 = hsas_mk_L1_filtered(L0, MAX_TILT_ACCEPTED_L1,"IW");
 else
@@ -467,8 +468,9 @@ L1.gps.hdg = interp1(gps.time, gps.hdg, L1.time,'extrap');
 L1.gps.sog_m2s = interp1(gps.time, gps.sog_m2s, L1.time,'extrap');
 L1.gps.cog_deg = interp1(gps.time, gps.cog_deg, L1.time,'extrap');
 
-L1.phi = interp1(gps.time, gps.phi, L1.time,'extrap'); % used only in fice 2022 -phi field must be at higher struct level
-
+L1.phi = interp1(gps.time, gps.phi, L1.time,'nearest','extrap'); % used only in fice 2022 -phi field must be at higher 
+%struct level
+keyboard
 #---- rho should be computed in L1 to L2 processing
 %L1 = hsas_cmp_rho_2pars(L1) % rho method
 
