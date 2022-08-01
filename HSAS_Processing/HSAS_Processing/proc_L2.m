@@ -165,7 +165,6 @@ L1_f.files.input_argv = {INSTRUMENT, DIN_L1, FILTERING};
 
 
 ### Create L2 structure ###
-keyboard
 L2 = L1_f;
 
 if strcmp(FILTERING,'lowest');
