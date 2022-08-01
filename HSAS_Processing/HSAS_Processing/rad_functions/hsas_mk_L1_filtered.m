@@ -1,14 +1,16 @@
-function L1 = hsas_mk_L1_filtered(L0, max_tilt_accepted, in_type)
+function L1 = hsas_mk_L1_filtered(L0,max_tilt_accepted, in_type)
+% Function filters based on: (i) max tilt angle accepted, (ii) radiometric data existing
 
 VERBOSE = false;
 
-
-
+%max_tilt_accepted = 50; % 
+L1.hdr.max_tilt_accepted = max_tilt_accepted;
 L1.wv = L0.wv;
+wv_ref = 21; % wavelength bin where data should always exist
 if strcmp(in_type,'AW')
-   iOK = find(L0.tilt < max_tilt_accepted & L0.instr.Li.data(:,1)>0 & L0.instr.Lt.data(:,1)>0 & L0.instr.Es.data(:,1)>0);
+   iOK = find(L0.tilt <= max_tilt_accepted & L0.instr.Li.data(:,wv_ref)>0 & L0.instr.Lt.data(:,wv_ref)>0 & L0.instr.Es.data(:,wv_ref)>0);
 else
-   iOK = find(L0.tilt < max_tilt_accepted & L0.instr.Lu.data(:,1)>0);
+   iOK = find(L0.tilt <= max_tilt_accepted & L0.instr.Lu.data(:,wv_ref)>0);
 endif
 
 flds = fieldnames(L0);

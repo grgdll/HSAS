@@ -435,23 +435,18 @@ L0.hdr.station_ref = CRUISE;
 
 #---Temperature Correction
 if FLAG_TEMPERATURE == 1
-L0 = hsas_temperature_correct(L0);
+	L0 = hsas_temperature_correct(L0);
 endif
 
 ### Create L1 structure ###
 
 # Tilt filter
-%
-% max_tilt_accepted = 50; % point to begin
-
-L1.hdr.max_tilt_accepted = MAX_TILT_ACCEPTED_L1;
 
 if strcmp(INSTRUMENT,'triosIW')
    L1 = hsas_mk_L1_filtered(L0, MAX_TILT_ACCEPTED_L1,"IW");
 else
    L1 = hsas_mk_L1_filtered(L0, MAX_TILT_ACCEPTED_L1,"AW"); 
 endif
-
 
 ##### remove old lat lon fields
 #    L1 = rmfield(L1, {"lat","lon"});
