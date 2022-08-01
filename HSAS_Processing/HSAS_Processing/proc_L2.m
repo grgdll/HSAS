@@ -209,6 +209,12 @@ else
    
 endif
 
+keyboard 
+% notes for begining work on 02/08
+% (i) proc L2 currently runs as far as final nc write function (very nearly the end)
+% (ii) hsas_filter_sensors_using_Lt_data result in a very large reduction in the size of L1_f and L2 (~1900 to 38 elements) We need to check why this is.
+% (iii) There is underlying issue that time fields (L0, L1, L2) contain non-unqiue values: can be traced back to raw data
+%
 
 #### Compute geometries
 
@@ -491,11 +497,12 @@ L2.conf.used_acs = false; # flag: ACS Chl used
 
 
 L2 = hsas_extract_fQ(L2, L2.conf.chl_alg);
-keyboard
+
 
 # Calculate normalised radiometric quantities
 L2 = hsas_extract_F0(L2);
 
+keyboard
 # Calculate Lw0
 #L2.Lw.data,L2.R0_R,L2.fQs0_fQs
 L2.Lw0.data = L2.Lw.data .* L2.R0_R .* L2.fQs0_fQs ;
