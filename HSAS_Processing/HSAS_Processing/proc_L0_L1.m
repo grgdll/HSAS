@@ -456,7 +456,6 @@ endif
 
 L1.gps.lat = nan(size(L1.time));
 L1.gps.lon = nan(size(L1.time));
-L1.gps.time = nan(size(L1.time));
 L1.gps.hdg = nan(size(L1.time));
 L1.gps.sog_m2s = nan(size(L1.time)); # speed over ground [m/s]
 L1.gps.cog_deg = nan(size(L1.time)); # course over ground [degrees]
