@@ -11,20 +11,19 @@ struct_levels_to_print (0);
 
 warning off #Turn off warnings
 
-%addpath("~/Dropbox/Octave_functions/")
-addpath("../JCR")
-addpath("../JCR/cruise_specific_functions")
-addpath("../JCR/rad_functions/")
-addpath("../JCR/rad_functions/intwv")
-addpath("../JCR/rad_functions/DISTRIB_fQ_with_Raman")
-addpath("../JCR/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa")
+% addpath("~/Dropbox/Octave_functions/")
+addpath(strcat(pwd, "/cruise_specific_functions")); % assumes code is run from ../HSAS_Processing
+addpath(strcat(pwd, "/rad_functions/"));
+addpath(strcat(pwd, "/rad_functions/intwv"));
+addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman"));
+addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 
 
 # read input parameters for this cruise
 input_parameters_hsas;
 
-
-fnin = argv; # Arguments passed to function
+%fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED 
+fnin = {"20220714"}; % tj - TEMPORARY HARD CODING - 1st day of FICE2022
 % fnin = {"20191019"};
 # fnin ={"hsas",...
 #   "/data/lazarev1/backup/cruise_data/AMT24/DallOlmo/HSAS/Satcon_extracted/Physical_units/",...
@@ -307,7 +306,7 @@ else
    save("-v7", fnout, "L2", "L1_f");
    disp(["Written file " fnout FILT_TAG  ".mat"]);
    fflush(stdout);
-   exit
+  % exit
    
 endif
 
@@ -324,7 +323,7 @@ else
    save("-v7", fnout, "L2", "L1_f");
    disp(["Written file " fnout FILT_TAG  ".mat"]);
    fflush(stdout);
-   exit
+   % exit
    
 endif
 
@@ -339,7 +338,8 @@ endif
 if strcmp(INSTRUMENT,'triosIW');
    disp("No rho correction");
 else
-   L2 = hsas_cmp_rho_2pars(L2);
+ %  L2 = hsas_cmp_rho_2pars(L2); % open ocean rho method
+    L2 = hsas_extract_rho_AeronetOC(L2); % open ocean rho method
 endif
 
 

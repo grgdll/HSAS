@@ -1,8 +1,8 @@
 function L2 = hsas_filter_sensors_using_Lt_data_v2(L1_f, L2, vza_nm)
-
-
+% glint filter based on Lt values in NIR
+pkg load nan
 # this is because I changed the name of the variable in the structure that contains the vza
-    if length(argn)==3
+    if length(argv)==3
         vza_nm = "vza";
     endif
 
@@ -10,22 +10,16 @@ function L2 = hsas_filter_sensors_using_Lt_data_v2(L1_f, L2, vza_nm)
 
 ##### filter : blo changed 850 to 820 to avoid nan's at the high NIR end wavelengths
     [tmp iNIR] = intersect(L2.wv, 700:820); # find index for NIR wavelengths 
-    x = mean(L1_f.instr.Lt.data(:,iNIR)');; # take the mean of the NIR data 
+    x = nanmean(L1_f.instr.Lt.data(:,iNIR)');; # take the mean of the NIR data 
 
     delta_t_secs = round((median(diff(L1_f.time)))*60*60*24);  # [seconds]  This is the median time-difference between scans
-    if isfield(L2.instr.Es, "sn")   # this is for Trios
-#        time_window = 15;  # data for trios are every 4 seconds so this corresponds to a 1-minute window
-        time_window = 60/delta_t_secs;  # computes approx how many scans we have in one minute
-    else    # this is for Hsas
-        time_window = 60/delta_t_secs;  # computes approx how many scans we have in one minute
-    endif
+    
+    time_window = 60/delta_t_secs;  # computes approx how many scans we have in one minute
+ 
     time_window = round(time_window);
     R = slidefun('min', time_window, x,'central');
     iLt = find(x==R)';
     L2.iLt = iLt;
-
-
-
     
     
 ##### apply filter to Lt data 
