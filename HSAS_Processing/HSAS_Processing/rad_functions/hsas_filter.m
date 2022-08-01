@@ -16,7 +16,7 @@ for if1 = 1:length(f1)
          for if3 = 1:length(f3)
             #disp(sprintf("  f3=%s",f3{if3}))
             if strcmp(f3{if3},"sn")
-               disp(["Skipping " f3{if3}])
+               disp(["Skipping ", f3{if3}])
             else
                if length(L2.(f1{if1}).(f2{if2}).(f3{if3}))>length(ikeep) & ~isstr(L2.(f1{if1}).(f2{if2}).(f3{if3}))
                   L2.(f1{if1}).(f2{if2}).(f3{if3}) = L2.(f1{if1}).(f2{if2}).(f3{if3})(ikeep,:);

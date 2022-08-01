@@ -165,6 +165,7 @@ L1_f.files.input_argv = {INSTRUMENT, DIN_L1, FILTERING};
 
 
 ### Create L2 structure ###
+keyboard
 L2 = L1_f;
 
 if strcmp(FILTERING,'lowest');
@@ -252,10 +253,14 @@ endif
 % endif
 
 # Compute relative azimuth between sensor and sun (phi)
-L2.phi = L1_f.phi = L2.vaa - L2.saa;
-L2.phi(L2.phi>180) = L1_f.phi(L1_f.phi>180) = abs(360-abs(L2.phi(L2.phi>180))); # this is because the phi-axis of the fQ table ranges from 0 to 180.
-L2.phi(L2.phi<  0) = L1_f.phi(L1_f.phi<  0) = abs(L2.phi(L2.phi<0));
-                
+keyboard
+if ~isfield(L1_f,'phi') % case of amt cruise
+	L2.phi = L1_f.phi = L2.vaa - L2.saa;
+	L2.phi(L2.phi>180) = L1_f.phi(L1_f.phi>180) = abs(360-abs(L2.phi(L2.phi>180))); # this is because the phi-axis of the fQ table ranges from 0 to 180.
+	L2.phi(L2.phi<  0) = L1_f.phi(L1_f.phi<  0) = abs(L2.phi(L2.phi<0));
+else % case of fice 2022
+	L2.phi = L1_f.phi;
+endif		        
 
 ### Read APPARENT????? wind speed and direction (this step is ship- and cruise-specific) 
 
@@ -477,14 +482,18 @@ else
 	L2.Rrs.data = L2.Lw.data./L2.instr.Es.data;
 
 endif
-keyboard
-L2 = hsas_R0_R(L2);
+
+% BDRF correction 
+L2 = hsas_R0_R(L2); % 'gothic R' ratio for flat surface - see Gordon 2005 (assumes dependence on theta_v but not windspeed)
+
 
 # Iteratively estimate chl or add ACS Chl to L2 structure and retrieve fQ values or use L2.chl to extract fQ
-L2.conf.chl_alg = "A";  # (A=Atlantic)
-L2.conf.used_acs = true; # flag: ACS Chl used
+L2.conf.chl_alg = "A";  # (A = Atlantic)
+L2.conf.used_acs = false; # flag: ACS Chl used
+
 
 L2 = hsas_extract_fQ(L2, L2.conf.chl_alg);
+keyboard
 
 # Calculate normalised radiometric quantities
 L2 = hsas_extract_F0(L2);

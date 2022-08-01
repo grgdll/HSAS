@@ -1,5 +1,7 @@
 function [fQs0_fQs, fQ0_fQs0, fQs0, fQs, fQ0, wv] = hsas_fQ_ratio(wv0, sza0, chl0, vza0, phi0, foQ, PLOT, TEST);
 
+phi0'
+keyboard
 
 VBS = false;
 

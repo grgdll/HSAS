@@ -46,6 +46,7 @@ function L2 = hsas_extract_fQ(L2, alg)
                 # set intial values of the i2p index (i2p=index to process)
                     i2p = find(abs(L2.chl_estimated-chl_old)>0.01 & ~isnan(L2.chl_estimated));
 #                while all(abs(L2.chl_estimated(i2p)-chl_old)>0.01)
+
                 while ~isempty(i2p)
 
   
@@ -63,14 +64,15 @@ function L2 = hsas_extract_fQ(L2, alg)
                     #5) stima chla usando LWN/Eo
                         L2.chl_estimated = hsas_estimate_chl(L2.wv, LWN2E0.data, alg);
 
-                        i2p = find(abs(L2.chl_estimated-chl_old)>0.01 & ~isnan(L2.chl_estimated));
+                        i2p = find(abs(L2.chl_estimated-chl_old)>0.01 & ~isnan(L2.chl_estimated))
 
 
                             if i_iter>=9
-                                disp("WARNING: max munber of interations reached")
+                                disp("WARNING: max nunber of interations reached")
                                 fflush(stdout);
                                 break
                             endif
+                            keyboard
                 endwhile                
             else
                 [L2.fQs0_fQs, L2.fQ0_fQs0, L2.fQs0, L2.fQs, L2.fQ0, L2.wv_ref, L2.chl_estimated] = deal([]);

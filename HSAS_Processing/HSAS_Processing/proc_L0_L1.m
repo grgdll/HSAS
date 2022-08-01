@@ -462,7 +462,9 @@ L1.gps.cog_deg = nan(size(L1.time)); # course over ground [degrees]
 
 L1.gps.lat = interp1(gps.time, gps.lat, L1.time);
 L1.gps.lon = interp1(gps.time, gps.lon, L1.time);
-L1.gps.hdg = interp1(gps.time, gps.hdg, L1.time);
+L1.gps.time = L1.time;
+L1.gps.phi = interp1(gps.time, gps.phi, L1.time); % used only in fice 2022
+L1.gps.hdg = interp1(gps.time, gps.hdg, L1.time); 
 L1.gps.sog_m2s = interp1(gps.time, gps.sog_m2s, L1.time);
 L1.gps.cog_deg = interp1(gps.time, gps.cog_deg, L1.time);
 
