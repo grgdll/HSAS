@@ -467,13 +467,13 @@ L1.gps.hdg = interp1(gps.time, gps.hdg, L1.time);
 L1.gps.sog_m2s = interp1(gps.time, gps.sog_m2s, L1.time);
 L1.gps.cog_deg = interp1(gps.time, gps.cog_deg, L1.time);
 
-#----computer rho
-L1 = hsas_cmp_rho_2pars(L1)
+#---- rho should be computed in L1 to L2 processing
+%L1 = hsas_cmp_rho_2pars(L1) % rho method
 
 ### Save files ###
 
 # Binary format
-%dout_L0 = [dout "L0/" ];
+% dout_L0 = [dout "L0/" ];
 if ~exist(dout_L0)
     mkdir(dout_L0);
 endif      
