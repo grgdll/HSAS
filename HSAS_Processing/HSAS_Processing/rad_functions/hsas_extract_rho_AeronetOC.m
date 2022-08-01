@@ -51,7 +51,6 @@ phi = [90, 135]';
         L2.rho(irec) = squeeze(interpn(ws(i_ws), sza(i_sza), squeeze(rho(i_ws,i_sza,1)), L2.(ws_nm)(irec), L2.sza(irec), 'linear'));
     endfor
 
-L2.rho
 
     if any(isnan(L2.rho))
         disp("WARNING: some input variables out of the range used to generate rho tables");

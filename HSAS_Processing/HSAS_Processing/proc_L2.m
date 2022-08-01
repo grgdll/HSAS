@@ -339,10 +339,9 @@ if strcmp(INSTRUMENT,'triosIW');
    disp("No rho correction");
 else
  %  L2 = hsas_cmp_rho_2pars(L2); % open ocean rho method
-    L2 = hsas_extract_rho_AeronetOC(L2); % open ocean rho method
+    L2 = hsas_extract_rho_AeronetOC(L2, 'appwind_spd'); % AAOT (tower) - apparent windspeed can be used
 endif
-
-
+	
 
 # ### Calculate Lw = Lt - rho*Li
 # if strcmp(fnin{1},'triosIW');
@@ -448,13 +447,15 @@ endif
  disp("----- skipped commented block -----");
  fflush(stdout);
 
-
-   if size(L2.rho_fitted,1)==1;
+% glint correction to water leaving radiance equation
+   L2.rho_fitted = L2.rho; % rho_fitted is name for opean ocean rho method
+   if size(L2.rho_fitted,2)==1; % 1 column implies aeronet rho method has been used
       L2.Lw.data = L2.instr.Lt.data - L2.rho_fitted.*L2.instr.Li.data;
-   else 
+   else % 2 columns implies open ocean rho method has been used
       L2.Lw.data = L2.instr.Lt.data - L2.rho_fitted(:,1).*L2.instr.Li.data - L2.rho_fitted(:,2);
    endif
-#endif
+   
+#endif ??
 
 ### Apply filter for negative data ###
 ikeep = find(L2.Lw.data(:,L2.wv==600)>0);
@@ -476,7 +477,7 @@ else
 	L2.Rrs.data = L2.Lw.data./L2.instr.Es.data;
 
 endif
-
+keyboard
 L2 = hsas_R0_R(L2);
 
 # Iteratively estimate chl or add ACS Chl to L2 structure and retrieve fQ values or use L2.chl to extract fQ
