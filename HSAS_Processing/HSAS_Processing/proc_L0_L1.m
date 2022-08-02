@@ -50,7 +50,7 @@ fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING -Example day/station of
 DATESTR = fnin{1};
 VERSION   = "v1";#fnin{3};
  
-doy = num2str(jday(datenum(DATESTR, "yyyymmdd")));
+doy = num2str(jday(datenum(DATESTR(1:8), "yyyymmdd")));
 %doy = fnin{1}
  
 
@@ -120,28 +120,28 @@ endif
 
 #----------------------------------
 ### Read GPS data ### 
-	fn_gps = glob([DIR_GPS, DATESTR, GLOB_GPS]){1}; % fill with lat lon from platform
+	fn_gps = glob([DIR_GPS, DATESTR(1:8), GLOB_GPS]){1}; % fill with lat lon from platform
 	gps = FNC_RD_GPS(  fn_gps   );
 	
 	
 #----------------------------------
 ### Read TILT AND ROLL data ###
 	 %fn_ths = glob([DIR_ATT, DATESTR, GLOB_ATT]){1}; AMT - where tilt and roll is present
-	 ths = FNC_RD_ATT(DATESTR);
+	 ths = FNC_RD_ATT(DATESTR(1:8));
 	 ths.tilt = [0, 0]; %[deg]
 	% ths.tilt = cmp_tilt(ths.roll, ths.pitch); # fill with tilt =0 AMT projection method
 	
 	
 #----------------------------------
 ### Read WIND data ###
-	fn_wind = glob([DIR_WIND, DATESTR, GLOB_WIND]){1}; % file name of wind xlsx 
+	fn_wind = glob([DIR_WIND, DATESTR(1:8), GLOB_WIND]){1}; % file name of wind xlsx 
 	wind = FNC_RD_WIND(  fn_wind   ); % wind data are not in utc - check bias correction in xls file
 	
 	
 #----------------------------------
 ### Read other met and surface data ### 
 if isdir(DIR_SURF)
-	fn_surf = glob([DIR_SURF, DATESTR, GLOB_SURF]){1};
+	fn_surf = glob([DIR_SURF, DATESTR(1:8), GLOB_SURF]){1};
 	surfdata = FNC_RD_SURF(  fn_surf   ); % surf in older versions
 endif
 	
