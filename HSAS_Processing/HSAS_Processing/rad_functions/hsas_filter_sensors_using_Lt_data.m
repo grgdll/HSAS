@@ -2,7 +2,7 @@ function [L2] = hsas_filter_sensors_using_Lt_data(L1_f, L2, XX, vza_nm)
 
 
 # this is because I changed the name of the variable in the structure that contains the vza
-    if length(argn)==3
+    if length(argv)==3
         vza_nm = "vza";
     endif
 
