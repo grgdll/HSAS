@@ -23,7 +23,7 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 input_parameters_hsas;
 
 %fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED 
-fnin = {"20220714"}; % tj - TEMPORARY HARD CODING - 1st day of FICE2022
+fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING - 1st day of FICE2022
 % fnin = {"20191019"};
 # fnin ={"hsas",...
 #   "/data/lazarev1/backup/cruise_data/AMT24/DallOlmo/HSAS/Satcon_extracted/Physical_units/",...
@@ -163,7 +163,6 @@ L1_f.files.input_argv = {INSTRUMENT, DIN_L1, FILTERING};
 
 
 
-keyboard 
 ### Create L2 structure ###
 L2 = L1_f;
 
@@ -209,12 +208,6 @@ else
    
 endif
 
-keyboard 
-% notes for begining work on 02/08
-% (i) proc L2 currently runs as far as final nc write function (very nearly the end)
-% (ii) hsas_filter_sensors_using_Lt_data result in a very large reduction in the size of L1_f and L2 (~1900 to 38 elements) We need to check why this is.
-% (iii) There is underlying issue that time fields (L0, L1, L2) contain non-unqiue values: can be traced back to raw data
-%
 
 #### Compute geometries
 
@@ -502,7 +495,7 @@ L2 = hsas_extract_fQ(L2, L2.conf.chl_alg);
 # Calculate normalised radiometric quantities
 L2 = hsas_extract_F0(L2);
 
-keyboard
+
 # Calculate Lw0
 #L2.Lw.data,L2.R0_R,L2.fQs0_fQs
 L2.Lw0.data = L2.Lw.data .* L2.R0_R .* L2.fQs0_fQs ;
@@ -517,6 +510,7 @@ L2.exRrs.data = L2.Lw.data .* L2.R0_R .* L2.fQs0_fQs .* L2.fQ0_fQs0 .* 1 ./ L2.i
 
 L2.files.L2 = fnout ;
 
+
 save("-v7", fnout, "L2", "L1_f");
 disp(["Written file " fnout "\n\n\n\n"]);
 fflush(stdout);
@@ -528,9 +522,9 @@ fflush(stdout);
 
 
 % # write NetCDF4 file
-[ tmp0, tmpfn] = fileparts(L2.files.L2);
-fn_L2_NetCDF = [dout_nc tmpfn ".nc"];
-hsas_write_L2_NetCDF(L2, fn_L2_NetCDF);
+% [ tmp0, tmpfn] = fileparts(L2.files.L2);
+% fn_L2_NetCDF = [dout_nc tmpfn ".nc"];
+% hsas_write_L2_NetCDF(L2, fn_L2_NetCDF);
 
 
 

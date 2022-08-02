@@ -1,5 +1,5 @@
 function [L2] = hsas_filter_sensors_using_Lt_data(L1_f, L2, XX, vza_nm)
-
+% glint filter based on Lt values in NIR
 
 # this is because I changed the name of the variable in the structure that contains the vza
     if length(argv)==3
@@ -8,8 +8,8 @@ function [L2] = hsas_filter_sensors_using_Lt_data(L1_f, L2, XX, vza_nm)
 
 
 
-L2.threshold4Lt_filter = XX;
-L2.conf.threshold4Lt_filter_in_percent = XX;
+L2.glint_filter.function = 'hsas_filter_sensors_using_Lt_data';
+L2.glint_filter.threshold4Lt_filter_in_percent = XX;
 
 
 # no filter case
@@ -35,7 +35,7 @@ L2.conf.threshold4Lt_filter_in_percent = XX;
     tmp = mean(L1_f.instr.Lt.data(:,iwv)');
 
     iLt = find(tmp <= prctile(tmp',XX));
-    
+    L2.glint_filter.indices_passed_qc = iLt;
 #    # metodo "casereccio" che usa Marco
 #        [Stmp, Itmp] = sort(tmp(:), 1) ;
 #        ii = floor(length(Itmp)/100*XX);
@@ -97,6 +97,8 @@ L2.conf.threshold4Lt_filter_in_percent = XX;
         L2.gps.lat = L1_f.gps.lat(ifilt,:);
         L2.gps.lon = L1_f.gps.lon(ifilt,:);
         L2.gps.hdg = L1_f.gps.hdg(ifilt,:);
+        L2.gps.sog_m2s = L1_f.gps.sog_m2s(ifilt,:);
+        L2.gps.cog_deg = L1_f.gps.cog_deg(ifilt,:);
 
 
 
