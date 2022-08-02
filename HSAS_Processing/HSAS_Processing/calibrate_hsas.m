@@ -1,6 +1,9 @@
 # read hasa digital counts and apply calibration coefficients
+% Modified for FICE 2022 to apply to stations rather than days
+
 clear all
 close all
+ 
  
 % pkg load financial
 
@@ -194,9 +197,10 @@ for iSN = 1:length(sn)
 		
 	###### calibrate data from this instrument
    
-	days = glob([DIN_HSAS "*"]); # read all days
-	istart = find(cellfun(@isempty, strfind(days, DAY_START))==0); # find first day to be processed
-	istop = find(cellfun(@isempty, strfind(days, DAY_STOP))==0); # find last day to be processed
+	days = glob([DIN_HSAS "2022*"]); # read all days (stations for fice 2022)
+	istart = min(find(cellfun(@isempty, strfind(days, DAY_START))==0)); # find first day (station) to be processed
+	istop = max(find(cellfun(@isempty, strfind(days, DAY_STOP))==0)); # find last day (station) to be processed
+	
 	
 	if isempty(istart) | isempty(istop)
 		disp('cannot find start or stop day');

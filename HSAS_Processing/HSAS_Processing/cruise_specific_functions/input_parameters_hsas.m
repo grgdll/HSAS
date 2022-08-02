@@ -13,7 +13,7 @@
 # dates to be processed
 	%DAY_START = "195"; %14 july %AMT proc uses jday
 	%DAY_STOP = "202"; %21 july
-	DAY_START = "20220714"; %14 july % fice proc uses datestr
+	DAY_START = "20220713"; %13 july % fice proc uses datestr
 	DAY_STOP = "20220721"; %21 july
 
 # cruise name
@@ -103,9 +103,9 @@ FNC_RD_SURF = @rd_oceanlogger_FICE; # function to read other met and surface dat
 ## Parameters for L2 processing
 #
 # type of filtering applied to data
-FILTERING  = 'continuous'; # 	L1_f = hsas_filter_sensors_using_Lt_data_v2(L1_f, L1_f, 'vaa_ths'); 
-% FILTERING  = 'lowest'; # 		L1_f = hsas_filter_sensors_using_Lt_data(L1_f, L1_f, 25, 'vaa_ths')
-% FILTERING  = 'both'; # 		L1_f = hsas_filter_sensors_using_Lt_data_v2(L1_f, L1_f, 'vaa_ths');
+%FILTERING  = 'continuous'; # 	L1_f = hsas_filter_sensors_using_Lt_data_v2(L1_f, L1_f, 'vaa_ths'); 
+ FILTERING  = 'lowest'; # 		L1_f = hsas_filter_sensors_using_Lt_data(L1_f, L1_f, 25, 'vaa_ths')
+ %FILTERING  = 'both'; # 		L1_f = hsas_filter_sensors_using_Lt_data_v2(L1_f, L1_f, 'vaa_ths');
 		  			   # 		L1_f = hsas_filter_sensors_using_Lt_data(L1_f, L1_f, 25, 'vaa_ths');
 
 #
