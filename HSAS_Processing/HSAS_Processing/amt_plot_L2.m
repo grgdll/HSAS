@@ -8,13 +8,11 @@ struct_levels_to_print (0);
 
 warning off #Turn off warnings
 
-addpath("../JCR")
-addpath("../JCR/cruise_specific_functions")
-addpath("../JCR/rad_functions/")
-addpath("../JCR/rad_functions/intwv")
-addpath("../JCR/rad_functions/DISTRIB_fQ_with_Raman")
-addpath("../JCR/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa")
-
+addpath(strcat(pwd, "/cruise_specific_functions")) %FICE 2022: assumes code is run from ../HSAS_Processing 
+addpath(strcat(pwd, "/rad_functions/"))
+addpath(strcat(pwd, "/rad_functions/intwv"))
+addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman"))
+addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"))
 
 # read input parameters for this cruise
 input_parameters_hsas;
@@ -30,7 +28,8 @@ disp('--------------------------------------------------------------------------
 fflush(stdout);
 
 
-DATESTR = fnin{1};
+%DATESTR = fnin{1};
+DATESTR = strsplit(fnin{1},'/'){end-1};
 
 XLIMS = [400 750];
 
@@ -104,17 +103,25 @@ for ifn =1:length(fn)
       subplot(247)
          hold on
 #            plot(L1_f.wv(iwv), L1_f.instr.Li.data, "k-")
-            plot(L2.wv(iwv), L2.instr.Lt.data(:,iwv), "r-")
+            plot(L2.wv(iwv), L2.instr.Li.data(:,iwv), "r-")
          xlabel("wavelength [nm]")
          ylabel("Li [uW/cm^2/nm/sr]")
 
+      #subplot(248)
+      #   hold on
+      #      plot(L1_f.time, L1_f.instr.Lt.data(:,L1_f.wv==440), "ko-")
+      #      plot(L2.time, L2.instr.Lt.data(:,L2.wv==440), "ro")
+      #   datetick("x", "HH")
+      #   xlabel("hour")
+      #   ylabel("Lt(440) [uW/cm^2/nm/sr]")
       subplot(248)
          hold on
-            plot(L1_f.time, L1_f.instr.Lt.data(:,L1_f.wv==440), "ko-")
-            plot(L2.time, L2.instr.Lt.data(:,L2.wv==440), "ro")
+            #plot(L1_f.time, L1_f.instr.Lt.data(:,L1_f.wv==440), "ko-")
+         plot(L2.time, pi*L2.instr.Li.data(:,L2.wv==400)./L2.instr.Es.data(:,L2.wv==400), "bo;400 nm;")
+         plot(L2.time, pi*L2.instr.Li.data(:,L2.wv==650)./L2.instr.Es.data(:,L2.wv==650), "ro;650 nm;")
          datetick("x", "HH")
          xlabel("hour")
-         ylabel("Lt(440) [uW/cm^2/nm/sr]")
+         ylabel("\pi*Li(\lambda)/Es(\lambda) [-]")
 
 set(gcf, 'paperposition', [0.25 0.25 14 6])
 
