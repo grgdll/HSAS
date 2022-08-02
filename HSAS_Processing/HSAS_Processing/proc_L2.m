@@ -22,8 +22,8 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 # read input parameters for this cruise
 input_parameters_hsas;
 
-%fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED 
-fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING - 1st day of FICE2022
+fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data
+%fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING - 1st day/station of FICE2022
 % fnin = {"20191019"};
 # fnin ={"hsas",...
 #   "/data/lazarev1/backup/cruise_data/AMT24/DallOlmo/HSAS/Satcon_extracted/Physical_units/",...

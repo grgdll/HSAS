@@ -37,7 +37,7 @@ MAIN_DIR = "/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/";
 
 % basename for calibrated files 
 %FNBASE	= [num2str(DEF_YEAR) '-' doy] % filename base for AMT crusies: doy variable in proc1
-FNBASE	= ['FRM4SOC2_FICE22_PML_'] %
+FNBASE	= ['FRM4SOC2_FICE22_PML_']; %
 
 ### INSTRUMENT serial numbers for trios (at least) are hardcoded
 ### SINGLE HARDCODED PATH REMAINS TO THS DATA BELOW AND DEF_YEAR IS HARDCODED ###
@@ -47,7 +47,7 @@ OSX = 0;
 % DOUT_SUFFIX = "./Processed_final/"; # this is the supphix that is appended to the DATA_PATH dir to define the directory for the output processed files
 
 
-DIR_GPS = [MAIN_DIR "xls/"]  # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
+DIR_GPS = [MAIN_DIR "xls/"];  # NOTE: each day of ancillary data must be separately stored in a directory with name yyyymmdd (e.g., 20150926)
 GLOB_GPS = "/*fice22_metadata.xlsx";  % lat = 45.31425, lon = 12.508317
 
 % case of AMT cruise

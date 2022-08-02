@@ -38,8 +38,8 @@ input_parameters_hsas;
 
 
 # Get arguments passed to function: INSTRUMENT switch is first argument xargs comes after
-%fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED 
-fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
+fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
+%fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
 % fnin = {"20150916"};
 % fnin = {"hsas", ...
 %   		"20191017", ...
@@ -47,10 +47,11 @@ fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING -Example day/station of
 #  "/Volumes/Public/DY110_Public/Optics_group/Data/Underway_Rrs/20191025/20191025_Satcon_extracted_raw/2019-298-120943-HSL223I.dat"};
 
 #fnin{1};
-DATESTR = fnin{1};
+DATESTR = strsplit(fnin{1},'/'){end-1}
 VERSION   = "v1";#fnin{3};
  
-doy = num2str(jday(datenum(DATESTR(1:8), "yyyymmdd")));
+
+doy = num2str(jday(datenum(DATESTR(1:8), "yyyymmdd")))
 %doy = fnin{1}
  
 
@@ -140,10 +141,10 @@ endif
 	
 #----------------------------------
 ### Read other met and surface data ### 
-if isdir(DIR_SURF)
-	fn_surf = glob([DIR_SURF, DATESTR(1:8), GLOB_SURF]){1};
-	surfdata = FNC_RD_SURF(  fn_surf   ); % surf in older versions
-endif
+%if isdir(DIR_SURF)
+%	fn_surf = glob([DIR_SURF, DATESTR(1:8), GLOB_SURF]){1};
+%	surfdata = FNC_RD_SURF(  fn_surf   ); % surf in older versions
+%endif
 	
 
 #---------------------------------
