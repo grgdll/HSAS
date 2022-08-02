@@ -42,11 +42,12 @@ disp('--------------------------------------------------------------------------
 fflush(stdout);
 
 
-DATESTR = strsplit(fnin{1},'/'){end-1}
+%DATESTR = strsplit(fnin{1},'/'){end-1};
+DATESTR = fnin{1};
 VERSION   = "v1";
  
 %doy = num2str(jday(datenum(DATESTR, "yyyymmdd")));
-doy = fnin{1}
+doy = fnin{1};
 
 [DIN_L1 DATESTR "/*mat" ]
 filename = glob([DIN_L1 DATESTR "/*mat" ]){1};

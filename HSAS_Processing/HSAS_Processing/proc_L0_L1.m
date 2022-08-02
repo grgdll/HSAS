@@ -46,12 +46,13 @@ fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
 %   	  	"v1"			};#, ...
 #  "/Volumes/Public/DY110_Public/Optics_group/Data/Underway_Rrs/20191025/20191025_Satcon_extracted_raw/2019-298-120943-HSL223I.dat"};
 
-#fnin{1};
-DATESTR = strsplit(fnin{1},'/'){end-1}
+
+% DATESTR = strsplit(fnin{1},'/'){end-1};
+DATESTR = fnin{1};
 VERSION   = "v1";#fnin{3};
  
 
-doy = num2str(jday(datenum(DATESTR(1:8), "yyyymmdd")))
+doy = num2str(jday(datenum(DATESTR(1:8), "yyyymmdd")));
 %doy = fnin{1}
  
 

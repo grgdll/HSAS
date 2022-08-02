@@ -60,7 +60,7 @@ GLOB_WIND = "/*meteo.xlsx";# glob pattern for wind data to concatenate after DAT
 
 %DIR_SURF = [MAIN_DIR "xls/"]; % temp and humidity stored in wind struct for FICE
 %GLOB_SURF = "/*meteo.xlsx";# glob pattern for surf data to concatenate after DATESTR
-DIR_SURF = [];
+%DIR_SURF = [];
 
 
 DIR_TEMPCORR = [MAIN_DIR "HyperSAS_config/Temperature/"];
