@@ -42,7 +42,7 @@ disp('--------------------------------------------------------------------------
 fflush(stdout);
 
 
-DATESTR = fnin{1};
+DATESTR = strsplit(fnin{1},'/'){end-1}
 VERSION   = "v1";
  
 %doy = num2str(jday(datenum(DATESTR, "yyyymmdd")));
