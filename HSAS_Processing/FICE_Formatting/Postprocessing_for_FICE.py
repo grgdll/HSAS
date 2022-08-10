@@ -177,20 +177,21 @@ def station_averages(D):
 def station_averages_dataframe(D, spec_id, station_i, time, windspeed, srf_bands):
     '''computes averages in data frame format including station meta data '''
           
+    print(str(np.nanmedian(windspeed)))
     summary_df = pd.DataFrame(index=None) 
     summary_df['spectrum'] = [spec_id + '_median', spec_id + '_standard_deviation', spec_id + '_mean', spec_id + '_uncertainty'] 
     summary_df['station'] = [station_i, station_i, station_i, station_i]
     summary_df['water body'] = ['Adriatic Sea', 'Adriatic Sea', 'Adriatic Sea', 'Adriatic Sea']
     summary_df['station start time'] = [str(time[0])[0:19], str(time[0])[0:19], str(time[0])[0:19], str(time[0])[0:19]]
-    summary_df['wind speed [m/s] (median, std, mean)'] = [str(np.nanmedian(windspeed)), str(np.nanstd(windspeed)), str(np.nanmean(windspeed)), '']
-    summary_df['sechi depth'] = ['', '', '', '']  
+    summary_df['wind speed [m/s] (median, std, mean)'] = [str(np.nanmedian(windspeed)), str(np.nanstd(windspeed)), str(np.nanmean(windspeed)), 'NaN']
+    summary_df['sechi depth'] = ['NaN', 'NaN', 'NaN', 'NaN']  
     
     # averages and std and uncertainty  of downsampled spectra in each band (np.array format)
     D_summary = np.zeros([4,len(srf_bands)])
     D_summary[0,:] = np.nanmedian(D,axis=0)
     D_summary[1,:] = np.nanstd(D,axis=0)
     D_summary[2,:] = np.nanmean(D,axis=0)
-    D_summary[3,:] = np.zeros(len(srf_bands))  # temporary fix for uncertainty
+    D_summary[3,:] = np.nan*np.ones(len(srf_bands))  # temporary fix for uncertainty
 
     # fill data frame with np.array info
     for k in range(len(srf_bands)):
@@ -211,7 +212,7 @@ def write_spectra(D_df,sensor_info, fpath):
             writer.writerow([''.join(row_i)])
     
     # append spectra dataframe to csvfile: dim = time * OLCI bands
-    D_df.to_csv(fpath, mode = 'a')
+    D_df.to_csv(fpath, na_rep ='NaN', mode = 'a')
     
     return 
 
@@ -244,11 +245,11 @@ def write_station_summary(summary_path, time, Es_av, Lt_av, Li_av, Rrs_av, exLwn
         writer.writerow([''.join(row)])
     
     # append station average dataframes for each sectrum to csv file -
-    Rrs_av.to_csv(summary_path, index = False, mode = 'a')
-    Es_av.to_csv(summary_path, index = False, mode = 'a')
-    Lt_av.to_csv(summary_path, index = False, mode = 'a')
-    Li_av.to_csv(summary_path, index = False, mode = 'a')
-    exLwn_av.to_csv(summary_path, index = False, mode = 'a')
+    Rrs_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
+    Es_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
+    Lt_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
+    Li_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
+    exLwn_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
     
     return
 
@@ -275,7 +276,7 @@ if __name__ == '__main__':
     # for i in range(len(stations)):
        # os.mkdir(dir_write + str(stations[i]))
 
-    for i in range(3): # process each station in sequence
+    for i in range(len(stations)): # process each station in sequence
     
         # access mat filenames (hsas data structures) of ith station 
         # fn_L0_i = glob.glob(dir_L0 + stations[i]  + '/*mat*')  - not needed??
@@ -314,6 +315,8 @@ if __name__ == '__main__':
         write_spectra(exLwn_OLCI[1], exLwn_info, exLwn_path)
         
         # perform averaging/variability for each spectra at each station -outputs dataframe that is appended to station summary in write function
+        
+        print(windspeed)
         Es_av = station_averages_dataframe(Es_OLCI[0],'Es', stations[i], time, windspeed, srf_bands)
         Lt_av = station_averages_dataframe(Lt_OLCI[0],'Lt', stations[i], time, windspeed, srf_bands)
         Li_av = station_averages_dataframe(Li_OLCI[0],'Li', stations[i], time, windspeed, srf_bands)
