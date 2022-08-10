@@ -86,25 +86,26 @@ def unpack_L2(fn_L2, time_L1, wv):
   
     L2 = io.loadmat(fn_L2[0], squeeze_me = True, struct_as_record = False) 
     
-    # load files in L2 format- L2 subscript indicates matrices are undersized
-    Rrs_L2 = L2['L2'].Rrs.data 
-    rho_L2 = L2['L2'].rho 
-    exLwn_L2 = L2['L2'].exLwn.data
-    time_L2 = np.array(numeric_to_UTC_time(L2['L2'].gps.time)) 
-    
-    # indicies in 1 time that match L2 time (i.e. pass overall QC)
-    L1_matches = np.intersect1d(time_L1, time_L2, return_indices = True)[1]
-
     # convert L2 data to length of L1 data, with nan-padding added where no data
     qc_mask = np.zeros(len(time_L1)) # 1 == data, 0 === no data
     Rrs = np.nan*np.ones([len(time_L1), len(wv)])
     exLwn = np.nan*np.ones([len(time_L1),len(wv)])
     rho = np.nan*np.ones(len(time_L1))
-    for i in range(len(L1_matches)): # fill L1-size stuctures 
-        qc_mask[int(L1_matches[i])] = 1 
-        Rrs[int(L1_matches[i]),:] = Rrs_L2[i,:] 
-        exLwn[int(L1_matches[i]),:] = exLwn_L2[i,:] 
-        rho[int(L1_matches[i])] = rho_L2[i]
+    
+    # load files in L2 format- L2 subscript indicates matrices are undersize
+    if 'Rrs' in L2['L2'].__dict__.keys():
+        Rrs_L2 = L2['L2'].Rrs.data 
+        rho_L2 = L2['L2'].rho 
+        exLwn_L2 = L2['L2'].exLwn.data
+        time_L2 = np.array(numeric_to_UTC_time(L2['L2'].gps.time)) 
+        
+        # indicies in 1 time that match L2 time (i.e. pass overall QC)
+        L1_matches = np.intersect1d(time_L1, time_L2, return_indices = True)[1]
+        for i in range(len(L1_matches)): # fill L1-size stuctures 
+            qc_mask[int(L1_matches[i])] = 1 
+            Rrs[int(L1_matches[i]),:] = Rrs_L2[i,:] 
+            exLwn[int(L1_matches[i]),:] = exLwn_L2[i,:] 
+            rho[int(L1_matches[i])] = rho_L2[i]
         
     return qc_mask, Rrs, exLwn, rho
 
