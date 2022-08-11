@@ -119,7 +119,7 @@ DIN_L1 = [MAIN_DIR DOUT_HSAS_SUB "L1/"];
 MAX_TILT = 5; # [degrees]
 #
 # nominal viewing angle of Li sensor wrt zenith (depends on installation)
-LI_VA = 50; # [degrees]
+LI_VA = 40; # [degrees]
 
 
 
