@@ -71,13 +71,17 @@ def unpack_L1(fn_L1):
     time = np.array(numeric_to_UTC_time(L1['L1'].gps.time)) 
     windspeed = L1['L1'].appwind_spd
  
-    Es= L1['L1'].instr.Es.data # hyperspectral data
+    Es = L1['L1'].instr.Es.data # hyperspectral data
     Lt = L1['L1'].instr.Lt.data
     Li = L1['L1'].instr.Li.data
     
+    Es_int_t = L1['L1'].instr.Es.int_time_sec[0]# integration time seconds - assumes constant for each station
+    Lt_int_t = L1['L1'].instr.Lt.int_time_sec[0]
+    Li_int_t = L1['L1'].instr.Li.int_time_sec[0]
+    
     wv = L1['L1'].wv 
 
-    return time, windspeed, Es, Lt, Li, wv
+    return time, windspeed, Es, Lt, Li, Es_int_t, Lt_int_t, Li_int_t, wv
 
 
 def unpack_L2(fn_L2, time_L1, wv):
@@ -99,7 +103,7 @@ def unpack_L2(fn_L2, time_L1, wv):
         exLwn_L2 = L2['L2'].exLwn.data
         time_L2 = np.array(numeric_to_UTC_time(L2['L2'].gps.time)) 
         
-        # indicies in 1 time that match L2 time (i.e. pass overall QC)
+        # indicies in L1 time that match L2 time (i.e. pass overall QC)
         L1_matches = np.intersect1d(time_L1, time_L2, return_indices = True)[1]
         for i in range(len(L1_matches)): # fill L1-size stuctures 
             qc_mask[int(L1_matches[i])] = 1 
@@ -178,7 +182,6 @@ def station_averages(D):
 def station_averages_dataframe(D, spec_id, station_i, time, windspeed, srf_bands):
     '''computes averages in data frame format including station meta data '''
           
-    print(str(np.nanmedian(windspeed)))
     summary_df = pd.DataFrame(index=None) 
     summary_df['spectrum'] = [spec_id + '_median', spec_id + '_standard_deviation', spec_id + '_mean', spec_id + '_uncertainty'] 
     summary_df['station'] = [station_i, station_i, station_i, station_i]
@@ -260,6 +263,7 @@ if __name__ == '__main__':
 
     # subdirectories to read data
     dir_main = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/'
+    dir_cal = dir_main + 'Processed_TPcorrection/Calibrated/'
     dir_L0 = dir_main + 'Processed_TPcorrection/L0/'
     dir_L1 = dir_main + 'Processed_TPcorrection/L1/'
     dir_L2 = dir_main + 'Processed_TPcorrection/L2/'
@@ -277,15 +281,16 @@ if __name__ == '__main__':
     # for i in range(len(stations)):
        # os.mkdir(dir_write + str(stations[i]))
 
-    for i in range(len(stations)): # process each station in sequence
+    for i in range(3): # process each station in sequence
     
-        # access mat filenames (hsas data structures) of ith station 
-        # fn_L0_i = glob.glob(dir_L0 + stations[i]  + '/*mat*')  - not needed??
-        fn_L1 = glob.glob(dir_L1 + stations[i]  + '/*mat*') # applies to data from ith station
+        # access  filenames (hsas data structures) of ith station 
+        fn_cal = glob.glob(dir_cal + stations[i]  + '/*dat*')
+        fn_L0 = glob.glob(dir_L0 + stations[i]  + '/*mat*')        
+        fn_L1 = glob.glob(dir_L1 + stations[i]  + '/*mat*') #
         fn_L2 = glob.glob(dir_L2 + stations[i]  + '/*mat*')
         
         # unpack variables from L1 and L2 data data stuctures in np array format
-        time, windspeed, Es, Lt, Li, wv = unpack_L1(fn_L1) 
+        time, windspeed, Es, Lt, Li, Es_int_t, Lt_int_t, Li_int_t, wv = unpack_L1(fn_L1) 
         qc_mask, Rrs, exLwn, rho = unpack_L2(fn_L2, time, wv) # L2 is nan-paddeded to match length of L1
         
         # spectral downsampling to OLCI: element 0 is np array, 1 is dataframe formate
