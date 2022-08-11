@@ -38,8 +38,8 @@ input_parameters_hsas;
 
 
 # Get arguments passed to function: INSTRUMENT switch is first argument xargs comes after
-fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
-%fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
+%fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
+fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
 % fnin = {"20150916"};
 % fnin = {"hsas", ...
 %   		"20191017", ...
@@ -67,7 +67,7 @@ dout_L1   	= [DOUT_HSAS "L1/" DATESTR "/" ];
 
 
 YYYY = sprintf("%4u", DEF_YEAR);
-[M,D] = jday2mmdd(DEF_YEAR,str2num(doy)); % CODE currently breaks here
+[M,D] = jday2mmdd(DEF_YEAR,str2num(doy)); % 
 MM = sprintf("%02u", M);
 DD = sprintf("%02u", D);
 DATESTR2 = [num2str(DEF_YEAR) doy];
@@ -345,6 +345,8 @@ if strcmp(INSTRUMENT,'hsas')
    L0.instr.Es.pitch = interp1(ths.time, ths.pitch, L0.time, TIME_INT_METHOD);
    L0.instr.Es.tilt = interp1(ths.time, ths.tilt, L0.time, TIME_INT_METHOD);
    L0.instr.Es.temp_pcb = interp1(ES.raw.time, ES.raw.TEMP_degC, LT.raw_intwv.time);
+   L0.instr.Es.int_time_sec = interp1(ES.raw.time, ES.raw.int_time_sec, LT.raw_intwv.time);
+  
    % try
    %    L0.instr.Es.vaa_ths = interp1(ths.time, ths.compass, L0.time, TIME_INT_METHOD);
    % catch
@@ -360,6 +362,7 @@ if strcmp(INSTRUMENT,'hsas')
    L0.instr.Li.pitch = interp1(ths.time, ths.pitch, L0.time, TIME_INT_METHOD);
    L0.instr.Li.tilt = interp1(ths.time, ths.tilt, L0.time, TIME_INT_METHOD);
    L0.instr.Li.temp_pcb = interp1(LI.raw.time, LI.raw.TEMP_degC, LT.raw_intwv.time);
+   L0.instr.Li.int_time_sec = interp1(LI.raw.time, LI.raw.int_time_sec, LT.raw_intwv.time);
    % try
  %      L0.instr.Li.vaa_ths = interp1(ths.time, ths.compass, L0.time, TIME_INT_METHOD);
  %   catch
@@ -375,6 +378,7 @@ if strcmp(INSTRUMENT,'hsas')
    L0.instr.Lt.pitch = interp1(ths.time, ths.pitch, L0.time, TIME_INT_METHOD);
    L0.instr.Lt.tilt = interp1(ths.time, ths.tilt, L0.time, TIME_INT_METHOD);
    L0.instr.Lt.temp_pcb = interp1(LT.raw.time, LT.raw.TEMP_degC, LT.raw_intwv.time);
+   L0.instr.Lt.int_time_sec = interp1(LT.raw.time, LT.raw.int_time_sec, LT.raw_intwv.time);
    % try
    %    L0.instr.Lt.vaa_ths = interp1(ths.time, ths.compass, L0.time, TIME_INT_METHOD);
    % catch
