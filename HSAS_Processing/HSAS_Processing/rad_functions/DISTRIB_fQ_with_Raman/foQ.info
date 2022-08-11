@@ -1,0 +1,13 @@
+The name of each file is composed of :
+   a prefix foQ for f over Q
+   the wavelength
+   the sun zenith angle
+   the chlorophyll concentration
+each file contains a table with 17 rows and 13 columns
+a direction in water is determined by a nadir angle and an azimutal angle
+each row is for a nadir angle
+each column is for an azimutal angle
+nadir angles (17) :
+1.078 3.411 6.289 9.278 12.300 15.330 18.370 21.410 24.450 27.500 30.540 33.590 36.640 39.690 42.730 45.780 48.830
+azimutal angles (13) :
+0 15 30 45 60 75 90 105 120 135 150 165 180

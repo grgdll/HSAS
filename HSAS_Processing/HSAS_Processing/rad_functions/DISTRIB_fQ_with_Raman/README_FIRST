@@ -1,0 +1,81 @@
+- You find here the f factor and f/Q values, calculated WITH Raman effect
+- f values are in the file f.dat
+- f/Q values are distributed in several files, located in directory D_foQ_pa
+- please read the file foQ.info
+- You can find also the Rgothic factor in the file rgoth_Ebuchi.dat;
+  first column : wind speed (xx for a flat ocean)
+  second column : nadir angle (under water)
+  third column : Rgothic
+- The tar archive "lin-approx.tar" contains 6 files
+  table.f0 and table.Sf, table.Q0 and table.SQn, table.fOQ0 and table.SfOQn
+    The f factor is linearly related to cos(tetas) for tetas <= 60 deg.
+      (tetas is the sun zenith angle) according to :
+                f = f0 + Sf * (1-cos(tetas))
+      table.f0 and table.Sf give the values of f0 and Sf
+        for various wavelengths and Chl-concentrations.
+    The same analysis is repeated for the parameter Qn (the Q factor at nadir)
+                Qn = Q0 + SQn * (1-cos(tetas))
+      table.Q0 and table.SQn give the values of Q0 and SQn
+    And for the ratio f/Qn (valid for tetas <= 75 deg.)
+                f/Qn = f0/Q0 + SfOQn * (1-cos(tetas))
+      table.fOQ0 and table.SfOQn give the values of f0/Q0 and SfOQn
+
+For your convenience (this is not mandatory however),
+would you want to concatenate all f/Q files in one single file,
+just type the unix command << make >>, in order to :
+1) concatenate all f/Q files in a single file named foq.dat
+2) build an include file foq.h for a fortran program named read_foQ.f; 
+3) compile and execute program read_foQ :
+   this program reads the foq.dat and f.dat files and produces a file
+   called values.dat; just compare this file with file values0.dat
+   to ensure that everything went well.
+
+N.B. :
+On SUN-SOLARIS it is necessary to change << awk >> by << nawk >>
+in script file foQ.f77
+
+For any problem, mail to :  gentili@obs-vlfr.fr
+
+----------------------------------------
+Convention for the azimutal difference :
+----------------------------------------
+
+Configuration 1
+---------------
+                      |      |
+                      |    - O - Sun
+                      |     /|
+  Satellite @         |    /
+              \       |   /
+                \     |  /
+                  \   | /
+                    \ |/ 
+     ~~~~~~~~~~~~~~~~~P~~~~~~~~~~~~~~~~
+                      |\
+                      | \
+                      |  \
+                      |   \
+                      |    \
+                      |
+
+azimutal difference = 0
+
+Configuration 2
+---------------
+                      |      |
+                      |    - O - Sun
+                      |     /|
+                      |         @ Satellite 
+                      |   /   /
+                      |  /  /
+                      | / /
+                      |//
+     ~~~~~~~~~~~~~~~~~P~~~~~~~~~~~~~~~~
+                     /|
+                    / |
+                   /  |
+                  /   |
+                 /    |
+                      |
+
+azimutal difference = 180 degrees
