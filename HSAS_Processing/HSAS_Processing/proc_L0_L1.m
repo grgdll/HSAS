@@ -38,8 +38,8 @@ input_parameters_hsas;
 
 
 # Get arguments passed to function: INSTRUMENT switch is first argument xargs comes after
-%fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
-fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
+fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
+%fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
 % fnin = {"20150916"};
 % fnin = {"hsas", ...
 %   		"20191017", ...

@@ -20,4 +20,6 @@ for fd in sub_dir:
     time.sleep(2)
     print('# Done for ',fd,'!')
 
+# alternative shortcuts
+# ls ../../../../Processed_TPcorrection/L1/ | xargs -n1 -P10 octave -qf amt_plot_L2.m - short cut for plot functiom
 
