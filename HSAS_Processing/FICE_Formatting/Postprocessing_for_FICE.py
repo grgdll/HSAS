@@ -273,13 +273,13 @@ def append_to_summary(dict_list):
      N_rrs= np.sum(~np.isnan(np.array(Rrs_OLCI[1]['400.0'])))
      P_rrs = 100*N_rrs/len(Rrs_OLCI[1]['400.0'])
      
-     CV_rrs = np.nanmean(Rrs_OLCI[1],axis=0)/np.nanstd(Rrs_OLCI[1],axis=0)
+     CV_rrs = np.nanmean(Rrs_OLCI[1][0:6],axis=0)/np.nanstd(Rrs_OLCI[1][0:6],axis=0)
      CV_rrs_band_av = np.nanmean(CV_rrs)
      
      
      new_row = {'station':  stations[i], 'mean env index': env_index_mean, 
                 'std env index': env_index_std, 'number Rrs': N_rrs,
-                 'percent Rrs': P_rrs, 'CV: band average': CV_rrs_band_av}
+                 'percent Rrs': P_rrs, 'CV: bands 1-6 mean': CV_rrs_band_av}
      dict_list.append(new_row)
      
      return dict_list
