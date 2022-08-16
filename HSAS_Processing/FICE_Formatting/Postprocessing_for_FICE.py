@@ -6,12 +6,12 @@ Created on Thu Aug  4 10:01:49 2022
 @author: tjor
 
 Python implementation of HSAS radiometic post-processing & data formatting for 
-FICE 2022
+FICE 2022, Adriatic
 
 Script includes:
 
 (i) Loading of L1 (Es, Li, Lt) and L2 (Rrs) output .mat files and end-end 
-uncertianty estimates
+uncertainty estimates
 
 (ii) Spectral downsampling of Li, Lt, Es, Rrs using OLCI spectral response function
 
@@ -24,9 +24,10 @@ mask for glint (Lt-based) QC, mask for tilt QC, mask for,
 
 (v) Writing station summary to .csv file based on FICE_2022_AAOT template
 - Includes station avergaes for Rrs, Es, Lt, Lt, Wind & core metadata required
--
+
 """
 #"""
+
 
 import os
 import sys
@@ -41,6 +42,8 @@ import ephem
 
 import matplotlib 
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
 
 import math
 import matplotlib.dates as mdates
@@ -55,7 +58,7 @@ def unpack_srf(dir_srf):
    
     srf_data = nc.Dataset(dir_srf + '/S3A_OL_SRF_20160713_mean_rsr.nc4') # load OLCI SRF
     srf_bands =  srf_data['nominal_centre_wavelength'][0:19]  # band centres up to 900 nm
-    # band_width = srf_data['bandwidth_fwhm'][0:16] - not needed
+    # band_width = srf_data['bandwidth_fwhm'][0:16] - FWHM of SRF - not needed
     srf_wv = np.array(srf_data['mean_spectral_response_function_wavelength'])
     srf = np.array(srf_data['mean_spectral_response_function'])
 
@@ -76,15 +79,14 @@ def unpack_L1(fn_L1):
     Li = L1['L1'].instr.Li.data
     
     if 'int_time_sec' in L1['L1'].instr.Es.__dict__.keys():
-        Es_int_t =  L1['L1'].instr.Es.int_time_sec[0]# integration time seconds - assumes constant for each station
+        Es_int_t =  L1['L1'].instr.Es.int_time_sec[0] # integration time seconds - assumes constant for each station
         Lt_int_t =  L1['L1'].instr.Lt.int_time_sec[0]
         Li_int_t = L1['L1'].instr.Li.int_time_sec[0]
     else:
-        Es_int_t =  np.nan# integration time seconds - assumes constant for each station
-        Lt_int_t =  np.nan# L1['L1'].instr.Lt.int_time_sec[0]
-        Li_int_t = np.nan# L1['L1'].instr.Li.int_time_sec[0]
+        Es_int_t =  np.nan
+        Lt_int_t =  np.nan
+        Li_int_t = np.nan
     
-    print(Es_int_t)
     wv = L1['L1'].wv 
 
     return time, windspeed, Es, Lt, Li, Es_int_t, Lt_int_t, Li_int_t, wv
@@ -152,7 +154,7 @@ def hyperspec_to_OLCIbands(S, time, wv, srf, srf_bands, srf_wv):
                     interp_funct = interp1d(wv_j, S_j, kind = 'cubic') # interpolate to same wv interval as OLCI
                     S_j_interp = interp_funct(srf_wv[k]) # oversample on same wv range as OLCI SRF 
                     S_j_k = np.sum(S_j_interp*srf[k])/np.sum(srf[k]) # convolution of kth band for jth timestamp with OLCI SRF
-                    D[j,k] =  S_j_k # 
+                    D[j,k] =  S_j_k # fill data matrix
     
     # Loop for pandas dataframe format
     D_df = pd.DataFrame(index = time) # pandas data frame format for down-sampled spectra
@@ -265,25 +267,61 @@ def write_station_summary(summary_path, time, Es_av, Lt_av, Li_av, Rrs_av, exLwn
 
 
 def append_to_summary(dict_list):
- 
-     env_index = np.pi*np.array(Li_OLCI[1]['400.0'])/np.array(Es_OLCI[1]['400.0'])
+     ''' Function to append to overall summary'''
+    
+     # cloudiness index - pi*Li(400)/Es(400)
+     env_index = np.pi*np.array(Li_OLCI[1]['400.0'])/np.array(Es_OLCI[1]['400.0']) 
      env_index_mean = np.nanmean(env_index)
      env_index_std =  np.nanstd(env_index)
      
-     N_rrs= np.sum(~np.isnan(np.array(Rrs_OLCI[1]['400.0'])))
-     P_rrs = 100*N_rrs/len(Rrs_OLCI[1]['400.0'])
+     N_rrs = np.sum(~np.isnan(np.array(Rrs_OLCI[1]['400.0']))) # no. of rrs retrievals
+     P_rrs = 100*N_rrs/len(Rrs_OLCI[1]['400.0'])     # % of rrs retreivals
      
      CV_rrs = np.nanstd(Rrs_OLCI[1],axis=0)/np.nanmean(Rrs_OLCI[1],axis=0)
-     print(CV_rrs)
-     CV_rrs_band_av = np.nanmean(CV_rrs[0:6])
+     CV_rrs_band_av = 100*np.nanmean(CV_rrs[0:6])  # % of rrs retreivals
      
+     windspeed_mean = np.nanmean(windspeed)
+     windspeed_std = np.nanstd(windspeed)
      
-     new_row = {'station':  stations[i], 'mean env index': env_index_mean, 
-                'std env index': env_index_std, 'number Rrs': N_rrs,
-                 'percent Rrs': P_rrs, 'CV: bands 1-6 mean': CV_rrs_band_av}
+     new_row = {'station':  stations[i], 'env_index_mean': env_index_mean, 
+                'env_index_std': env_index_std, 'number_Rrs': N_rrs,
+                 'percent_Rrs': P_rrs, 'CV_rrs_band_av': CV_rrs_band_av,
+                 'windspeed_mean': windspeed_mean, 'windspeed_std':  windspeed_std}
      dict_list.append(new_row)
      
      return dict_list
+ 
+    
+def conditions_summaryplots(df_overall):
+
+     fig, ax = plt.subplots()
+     plt.figure(figsize=(20,20))
+     plt.rc('font', size=12)   
+     plt.title('Dependence of Rrs variability on cloudiness (station average values)')
+     colors = cm.jet(np.linspace(0, 1, len(df_overall)))
+     for i in range(len(df_overall)):
+         plt.scatter(df_overall['CV_rrs_band_av'][i], df_overall['env_index_mean'][i],c=colors[i], cmap='jet',label = df_overall['station'][i])
+     plt.legend(labels = df_overall['station'])
+     plt.xlabel('CV[Rrs]: mean for OLCI bands 1-6 [%]')
+     plt.ylabel('$\pi$Li(400)/Es(400): (cloudiness index)')
+     plt.ylim(0,1)
+     plt.xlim(0,10)
+     
+     plt.figure(figsize=(20,20))
+     plt.rc('font', size=12)   
+     plt.title('Dependence of Rrs variability on windspeed (station average values)')
+     colors = cm.jet(np.linspace(0, 1, len(df_overall)))
+     for i in range(len(df_overall)):
+         plt.scatter(df_overall['CV_rrs_band_av'][i], df_overall['windspeed_mean'][i],c=colors[i], cmap='jet',label = df_overall['station'][i])
+     plt.legend(labels = df_overall['station'])
+     plt.xlabel('CV[Rrs]: mean for OLCI bands 1-6 [%]')
+     plt.ylabel('Windspeed [m/s]')
+     plt.ylim(0,6)
+     plt.xlim(0,10)   
+ 
+     return
+    
+    
     
 if __name__ == '__main__':
 
@@ -308,20 +346,21 @@ if __name__ == '__main__':
     # for i in range(len(stations)):
        # os.mkdir(dir_write + str(stations[i]))
       
-    dict_list = []
-    for i in range(0,len(stations)): # process each station in sequence
+    dict_list = []   # list to append summaries
+    for i in range(len(stations)): # process each station in sequence
     
-        # access  filenames (hsas data structures) of ith station 
-        fn_cal = glob.glob(dir_cal + stations[i]  + '/*dat*')
-        fn_L0 = glob.glob(dir_L0 + stations[i]  + '/*mat*')        
+        # access  filenames (hsas data structures) of ith station - cal and L0 currently not used
+        #  fn_cal = glob.glob(dir_cal + stations[i]  + '/*dat*')
+        #  f n_L0 = glob.glob(dir_L0 + stations[i]  + '/*mat*')        
         fn_L1 = glob.glob(dir_L1 + stations[i]  + '/*mat*') #
         fn_L2 = glob.glob(dir_L2 + stations[i]  + '/*mat*')
         
         # unpack variables from L1 and L2 data data stuctures in np array format
         time, windspeed, Es, Lt, Li, Es_int_time, Lt_int_time, Li_int_time, wv = unpack_L1(fn_L1) 
-        qc_mask, Rrs, exLwn, rho = unpack_L2(fn_L2, time, wv) # L2 is nan-paddeded to match length of L1
+        qc_mask, Rrs, exLwn, rho = unpack_L2(fn_L2, time, wv) # L2 data is just where rrs passes QC - it is nan-padded to match length of L1 data
         
-        # spectral downsampling to OLCI: element 0 is np array, 1 is dataframe formate
+
+        # spectral downsampling to OLCI: putput element 0 is np array, 1 is dataframe format
         Es_OLCI = hyperspec_to_OLCIbands(Es, time, wv, srf, srf_bands, srf_wv)  
         Lt_OLCI = hyperspec_to_OLCIbands(Lt, time, wv, srf, srf_bands, srf_wv)
         Li_OLCI = hyperspec_to_OLCIbands(Li, time, wv, srf, srf_bands, srf_wv)
@@ -329,6 +368,7 @@ if __name__ == '__main__':
         exLwn_OLCI = hyperspec_to_OLCIbands(exLwn, time, wv, srf, srf_bands, srf_wv) 
         # multi_hyper_plot(Es, wv, Es_OLCI, srf_bands, 'Es [mW cm$^{2}$ $\mu$m^{1}$')
         
+
         # collate sensor info and write downsampled spectra to csv files
         Es_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '2027A', 'Integration time': str(Es_int_time), 'Raw wavelength scale': 'TO ADD'} 
         Lt_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '464', 'Integration time': str(Li_int_time), 'Raw wavelength scale': 'TO ADD'} 
@@ -348,9 +388,8 @@ if __name__ == '__main__':
         write_spectra(Rrs_OLCI[1], Rrs_info, Rrs_path)
         write_spectra(exLwn_OLCI[1], exLwn_info, exLwn_path)
         
-        # perform averaging/variability for each spectra at each station -outputs dataframe that is appended to station summary in write function
-        
 
+        # perform averaging/variability for each spectra at each station -outputs dataframe that is appended to station summary in write function
         Es_av = station_averages_dataframe(Es_OLCI[0],'Es', stations[i], time, windspeed, srf_bands)
         Lt_av = station_averages_dataframe(Lt_OLCI[0],'Lt', stations[i], time, windspeed, srf_bands)
         Li_av = station_averages_dataframe(Li_OLCI[0],'Li', stations[i], time, windspeed, srf_bands)
@@ -362,10 +401,12 @@ if __name__ == '__main__':
         
         dict_list = append_to_summary(dict_list)
     
+    # overall summary - used for station selection    
     ov_summary_path = dir_write +  '/' + 'FICE_conditions_summary.csv'
     df_overall = pd.DataFrame.from_dict(dict_list)  
     df_overall.to_csv(ov_summary_path, na_rep ='NaN', index = False)
         
-    
 
- 
+    conditions_summaryplots(df_overall)
+
+
