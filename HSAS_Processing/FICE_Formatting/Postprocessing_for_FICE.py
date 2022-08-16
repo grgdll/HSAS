@@ -251,7 +251,7 @@ def write_station_summary(summary_path, time, Es_av, Lt_av, Li_av, Rrs_av, exLwn
         writer.writerow([''.join(row)])
         row = str('#time_period: [{"start:"' + str(time[0])[0:19] + ',"end:"' + str(time[-1])[0:19] + '}]')
         writer.writerow([''.join(row)])
-        row = str('#reflectance_calculation equation: TO ADD')
+        row = str('#reflectance_calculation equation: Aeronet OC lookup table based on Zibordi et al. 2009"')
         writer.writerow([''.join(row)])
         row = str('units: {"reflectance":["Wavelength [nm]","Reflectance [ / sr"],"es":["Wavelength [nm]","Irradiance [mW / (cm^2 * 10^-6 m)]"],"lt":["Wavelength [nm]","Radiance [mW / (sr * cm^2 * 10^-6 m)]"],"li":["Wavelength [nm]","Radiance [mW / (sr cm^2 * 10^-6 m)]"]}')
         writer.writerow([''.join(row)])
@@ -301,7 +301,7 @@ def conditions_summaryplots(df_overall):
      colors = cm.jet(np.linspace(0, 1, len(df_overall)))
      for i in range(len(df_overall)):
          plt.scatter(df_overall['CV_rrs_band_av'][i], df_overall['env_index_mean'][i],c=colors[i], cmap='jet',label = df_overall['station'][i])
-     plt.legend(labels = df_overall['station'])
+     plt.legend(labels = df_overall['station'], ncol=2)
      plt.xlabel('CV[Rrs]: mean for OLCI bands 1-6 [%]')
      plt.ylabel('$\pi$Li(400)/Es(400): (cloudiness index)')
      plt.ylim(0,1)
@@ -313,7 +313,7 @@ def conditions_summaryplots(df_overall):
      colors = cm.jet(np.linspace(0, 1, len(df_overall)))
      for i in range(len(df_overall)):
          plt.scatter(df_overall['CV_rrs_band_av'][i], df_overall['windspeed_mean'][i],c=colors[i], cmap='jet',label = df_overall['station'][i])
-     plt.legend(labels = df_overall['station'])
+     plt.legend(labels = df_overall['station'], ncol=2)
      plt.xlabel('CV[Rrs]: mean for OLCI bands 1-6 [%]')
      plt.ylabel('Windspeed [m/s]')
      plt.ylim(0,6)
@@ -347,11 +347,11 @@ if __name__ == '__main__':
        # os.mkdir(dir_write + str(stations[i]))
       
     dict_list = []   # list to append summaries
-    for i in range(len(stations)): # process each station in sequence
+    for i in range(3): # process each station in sequence
     
         # access  filenames (hsas data structures) of ith station - cal and L0 currently not used
         #  fn_cal = glob.glob(dir_cal + stations[i]  + '/*dat*')
-        #  f n_L0 = glob.glob(dir_L0 + stations[i]  + '/*mat*')        
+        fn_L0 = glob.glob(dir_L0 + stations[i]  + '/*mat*')        
         fn_L1 = glob.glob(dir_L1 + stations[i]  + '/*mat*') #
         fn_L2 = glob.glob(dir_L2 + stations[i]  + '/*mat*')
         
@@ -370,12 +370,25 @@ if __name__ == '__main__':
         
 
         # collate sensor info and write downsampled spectra to csv files
-        Es_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '2027A', 'Integration time': str(Es_int_time), 'Raw wavelength scale': 'TO ADD'} 
-        Lt_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '464', 'Integration time': str(Li_int_time), 'Raw wavelength scale': 'TO ADD'} 
-        Li_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '2054A', 'Integration time': str(Li_int_time), 'Raw wavelength scale': 'TO ADD'} 
-        Rrs_info = {'Make': 'Seabird', 'Model': 'HypserSAS'}
-        exLwn_info = {'Make': 'Seabird', 'Model': 'HypserSAS'}
-        
+        wv_string = '(' + str(wv[0]) + ', ' + str(wv[-1]) + ', ' + str(wv[1]-wv[0]) +')'
+        Es_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '2027A', 
+                   'Integration time': str(Es_int_time), 
+                   'Wavelength scale (max, min, spacing: all post interpolation)':  wv_string}
+                
+        Lt_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '464', 
+                   'Integration time': str(Lt_int_time), 
+                   'Wavelength scale (max, min, spacing: all post interpolation)': wv_string}
+                 
+        Li_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '2054A', 
+                   'Integration time': str(Li_int_time), 
+                   'Wavelength scale (max, min, spacing: all post interpolation)': wv_string}
+                       
+        Rrs_info = {'Make': 'Seabird', 'Model': 'HypserSAS',
+                    'Wavelength scale (max, min, spacing: all post interpolation)': wv_string}
+                        
+        exLwn_info = {'Make': 'Seabird', 'Model': 'HypserSAS',
+                      'Wavelength scale (max, min, spacing: all post interpolation)': wv_string}
+                        
         Es_path = dir_write +  stations[i] + '/' + 'Es_' + stations[i] + '.csv'
         Lt_path = dir_write +  stations[i] + '/' + 'Lt_' + stations[i] + '.csv'
         Li_path = dir_write +  stations[i] + '/' + 'Li_' + stations[i] + '.csv'
