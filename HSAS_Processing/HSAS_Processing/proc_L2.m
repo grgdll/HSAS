@@ -23,8 +23,9 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 input_parameters_hsas;
 
 fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data
-%fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING - 1st day/station of FICE2022
-% fnin = {"20191019"};
+# fnin = {"20220714_132000"}; % tj - TEMPORARY HARD CODING - 1st day/station of FICE2022
+# ffnin = {"20220713_133100"}; 
+# fnin = {"20191019"};
 # fnin ={"hsas",...
 #   "/data/lazarev1/backup/cruise_data/AMT24/DallOlmo/HSAS/Satcon_extracted/Physical_units/",...
 #   "v1",...
@@ -317,6 +318,7 @@ endif
 #80<PHI>170
 ikeep = find(L2.phi<MAX_PHI_L2 & L2.phi>MIN_PHI_L2);
 
+
 if ikeep != 0.0
    L2 = hsas_filter(L2, ikeep); 
    
@@ -326,8 +328,9 @@ else
    save("-v7", fnout, "L2", "L1_f");
    disp(["Written file " fnout FILT_TAG  ".mat"]);
    fflush(stdout);
-   % exit
+   exit
    
+
 endif
 
 
@@ -511,11 +514,9 @@ L2.exRrs.data = L2.Lw.data .* L2.R0_R .* L2.fQs0_fQs .* L2.fQ0_fQs0 .* 1 ./ L2.i
 
 L2.files.L2 = fnout ;
 
-
 save("-v7", fnout, "L2", "L1_f");
 disp(["Written file " fnout "\n\n\n\n"]);
 fflush(stdout);
-
 
 
 

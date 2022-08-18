@@ -7,7 +7,7 @@
 #
 # Oct 2019: New version to clean up and generalise by gdal.  PCode set to process one file or one day at a time? ()
 #
-# July/Aug 2022: Modifications by tjor and gdal for FICE2022 (platform deployment). Key mods: (i) code procresss by station (rather than day), (ii) code reads a different format of meta data (wind, gps, ext): relevant read functions have _FICE as identifiers. (iii) new sensors are used (2027, 2054, 464) which required modification to the read calibration file,
+# July/Aug 2022: Modifications by tjor and gdal for FICE2022 (platform deployment). Key mods: (i) code process by station (rather than day), (ii) code reads a different format of meta data (wind, gps, ext): relevant read functions have _FICE as identifiers. (iii) new sensors are used (2027, 2054, 464) which required modification to the read calibration file.
 # 
 
 
@@ -39,7 +39,9 @@ input_parameters_hsas;
 
 # Get arguments passed to function: INSTRUMENT switch is first argument xargs comes after
 fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
-%fnin = {"20220714_090000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
+
+#fnin = {"20220714_132000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
+#fnin = {"20220713_133100"}; 
 % fnin = {"20150916"};
 % fnin = {"hsas", ...
 %   		"20191017", ...
@@ -48,8 +50,8 @@ fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
 
 
 % DATESTR = strsplit(fnin{1},'/'){end-1};
-DATESTR = fnin{1};
-VERSION   = "v1";#fnin{3};
+DATESTR = fnin{1}
+VERSION   = "v1"; # fnin{3};
  
 
 doy = num2str(jday(datenum(DATESTR(1:8), "yyyymmdd")));
@@ -184,7 +186,7 @@ if strcmp(INSTRUMENT, 'hsas')
 		%fn = glob( [din FNBASE "*-[0-2]*" file_ext{irad} sn{irad} "*dat"] ); AMT cruise version
 		fn = glob( [din FNBASE "*" file_ext{irad} sn{irad} "*dat"] );
 		 ####################################################
-		
+	
 		rad.raw = hsas_rd_many(sn_rad, fn, VBS); 
 
     

@@ -9,7 +9,8 @@ function gps = rd_gps_FICE(fn)
 
 	pkg load io
 
-	DATESTR = strsplit(fn, {'/','_'}){12}; 
+	DATESTR = strsplit(fn, {'/','_'}){12}
+	
     	[data, headers] = xlsread(fn, DATESTR); % DATESTR is used to pass sheet number
     	station_number = data(:,1); 
     	id = cell2mat(headers(2:end,2)); % Identifier for metadata record
