@@ -19,8 +19,9 @@ input_parameters_hsas;
 
 
 fnin = argv;
-% fnin = {"20191017"};
-
+#fnin = {'20220719_100000'}
+#fnin = {"20220713_133100"}; 
+#fnin = {"20220714_132000"}
 
 disp('----------------------------------------------------------------------------------------------------------');
 disp(fnin{1});
@@ -28,8 +29,9 @@ disp('--------------------------------------------------------------------------
 fflush(stdout);
 
 
-%DATESTR = fnin{1};
-DATESTR = strsplit(fnin{1},'/'){end-1};
+DATESTR = fnin{1};
+%DATESTR = strsplit(fnin{1},'/')#{end-1}
+
 
 XLIMS = [400 750];
 
@@ -48,7 +50,8 @@ for ifn =1:length(fn)
 
    clear L2 L1_f
 
-   load(fn{ifn});
+   load(fn{ifn})
+ 
 
    # select range of wv to be plotted
    iwv = find(L2.wv>=XLIMS(1) & L2.wv<=XLIMS(2));

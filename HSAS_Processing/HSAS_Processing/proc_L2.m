@@ -22,9 +22,9 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 # read input parameters for this cruise
 input_parameters_hsas;
 
-fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data
-# fnin = {"20220714_132000"}; % tj - TEMPORARY HARD CODING - 1st day/station of FICE2022
-# ffnin = {"20220713_133100"}; 
+fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data 
+# fnin = {"20220714_124000"}; % tj - TEMPORARY HARD CODING - 1st day/station of FICE2022
+# fnin = {"20220713_133100"}; 
 # fnin = {"20191019"};
 # fnin ={"hsas",...
 #   "/data/lazarev1/backup/cruise_data/AMT24/DallOlmo/HSAS/Satcon_extracted/Physical_units/",...
@@ -255,10 +255,10 @@ endif
 # Compute relative azimuth between sensor and sun (phi)
 if ~isfield(L1_f,'phi') % case of amt cruise
 	L2.phi = L1_f.phi = L2.vaa - L2.saa;
-	L2.phi(L2.phi>180) = L1_f.phi(L1_f.phi>180) = abs(360-abs(L2.phi(L2.phi>180))); # this is because the phi-axis of the fQ table ranges from 0 to 180.
-	L2.phi(L2.phi<  0) = L1_f.phi(L1_f.phi<  0) = abs(L2.phi(L2.phi<0));
+	L2.phi(L2.phi > 180) = L1_f.phi(L1_f.phi>180) = abs(360-abs(L2.phi(L2.phi>180))); # this is because the phi-axis of the fQ table ranges from 0 to 180.
+	L2.phi(L2.phi <  0) = L1_f.phi(L1_f.phi<  0) = abs(L2.phi(L2.phi<0));
 else % case of fice 2022
-	L2.phi = L1_f.phi;
+        L2.phi = L1_f.phi;
 endif		        
 
 ### Read APPARENT????? wind speed and direction (this step is ship- and cruise-specific) 
@@ -293,7 +293,6 @@ endif
 %         endfor
 %
 
-
 ################################################################################
 ### Quality control ### NO MORE L1_F!
 
@@ -315,8 +314,9 @@ else
 endif
 
 
-#80<PHI>170
-ikeep = find(L2.phi<MAX_PHI_L2 & L2.phi>MIN_PHI_L2);
+#80<PHI>170    
+ikeep = find(abs(L2.phi) < MAX_PHI_L2 & abs(L2.phi)>MIN_PHI_L2); # for FICE; require absolute values of phi?
+
 
 
 if ikeep != 0.0
@@ -334,12 +334,12 @@ else
 endif
 
 
-
 ## Lt(750)>4 mW/(m2 nm sr)??? # commented in original code
 # ikeep = find(L2.instr.Lt.data(:,find(L2.wv>=750,1))<1.5);
 # L2 = hsas_filter(L2, ikeep);
 
 ### Calculate rho so that Lw in the NIR is zero and flat ###
+
 
 if strcmp(INSTRUMENT,'triosIW');
    disp("No rho correction");
@@ -348,6 +348,7 @@ else
     L2 = hsas_extract_rho_AeronetOC(L2, 'appwind_spd'); % AAOT (tower) - apparent windspeed can be used
 endif
 	
+
 
 # ### Calculate Lw = Lt - rho*Li
 # if strcmp(fnin{1},'triosIW');

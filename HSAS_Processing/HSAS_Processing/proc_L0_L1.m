@@ -39,9 +39,10 @@ input_parameters_hsas;
 
 # Get arguments passed to function: INSTRUMENT switch is first argument xargs comes after
 fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
-
-#fnin = {"20220714_132000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
-#fnin = {"20220713_133100"}; 
+# fnin = {"20220714_124000"};
+# fnin = {"20220714_132000"};
+# fnin = {"20220714_132000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
+# fnin = {"20220713_133100"}; 
 % fnin = {"20150916"};
 % fnin = {"hsas", ...
 %   		"20191017", ...
@@ -376,15 +377,15 @@ if strcmp(INSTRUMENT,'hsas')
 
    # Lt
    L0.instr.Lt = hsas_int2Lt(LT.raw_intwv, LT.raw_intwv.time);
-   L0.instr.Lt.roll = interp1(ths.time, ths.roll, L0.time, TIME_INT_METHOD);
-   L0.instr.Lt.pitch = interp1(ths.time, ths.pitch, L0.time, TIME_INT_METHOD);
-   L0.instr.Lt.tilt = interp1(ths.time, ths.tilt, L0.time, TIME_INT_METHOD);
-   L0.instr.Lt.temp_pcb = interp1(LT.raw.time, LT.raw.TEMP_degC, LT.raw_intwv.time);
-   L0.instr.Lt.int_time_sec = interp1(LT.raw.time, LT.raw.int_time_sec, LT.raw_intwv.time);
+   L0.instr.Lt.roll = interp1(ths.time, ths.roll, L0.time, TIME_INT_METHOD,'extrap');
+   L0.instr.Lt.pitch = interp1(ths.time, ths.pitch, L0.time, TIME_INT_METHOD,'extrap');
+   L0.instr.Lt.tilt = interp1(ths.time, ths.tilt, L0.time, TIME_INT_METHOD,'extrap');
+   L0.instr.Lt.temp_pcb = interp1(LT.raw.time, LT.raw.TEMP_degC, LT.raw_intwv.time,'extrap');
+   L0.instr.Lt.int_time_sec = interp1(LT.raw.time, LT.raw.int_time_sec, LT.raw_intwv.time,'extrap');
    % try
    %    L0.instr.Lt.vaa_ths = interp1(ths.time, ths.compass, L0.time, TIME_INT_METHOD);
    % catch
-      L0.instr.Lt.vaa_ths = interp1(gps.time, gps.hdg, L0.time, TIME_INT_METHOD);
+      L0.instr.Lt.vaa_ths = interp1(gps.time, gps.hdg, L0.time, TIME_INT_METHOD,'extrap');
    % end_try_catch
 
    L0.instr.Lt.sn = LT.raw.sn;
@@ -399,18 +400,18 @@ if strcmp(INSTRUMENT,'hsas')
 
    # add the apparent wind data
 
-	L0.appwind_spd = interp1(wind.time, wind.wspd, L0.time, TIME_INT_METHOD); # [m/s] % may be wind.ws for different rd wind functions
-	L0.appwind_dir = interp1(wind.time, wind.wdir, L0.time, TIME_INT_METHOD); # [degrees]
+	L0.appwind_spd = interp1(wind.time, wind.wspd, L0.time, TIME_INT_METHOD,'extrap'); # [m/s] % may be wind.ws for different rd wind functions
+	L0.appwind_dir = interp1(wind.time, wind.wdir, L0.time, TIME_INT_METHOD,'extrap'); # [degrees]
 	
 	if exist('surfdata')
 		fld = fieldnames(surfdata);
 		for ifld = 1:length(fld)
-			L0.surf_met.(fld{ifld}) = interp1(surf.time, surf.(fld{ifld}), L0.time, TIME_INT_METHOD); # [degC]
+			L0.surf_met.(fld{ifld}) = interp1(surf.time, surf.(fld{ifld}), L0.time, TIME_INT_METHOD,'extrap'); # [degC]
 		endfor
 	else
 		if isfield(wind, 'airt')
-			L0.surf_met.airtemp = interp1(wind.time, wind.airt, L0.time, TIME_INT_METHOD); # [degC]
-			L0.surf_met.humid = interp1(wind.time, wind.humid, L0.time, TIME_INT_METHOD); # [%] relative humidity
+			L0.surf_met.airtemp = interp1(wind.time, wind.airt, L0.time, TIME_INT_METHOD,'extrap'); # [degC]
+			L0.surf_met.humid = interp1(wind.time, wind.humid, L0.time, TIME_INT_METHOD,'extrap'); # [%] relative humidity
 		endif
 	endif
 	

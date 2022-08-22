@@ -103,6 +103,7 @@ def unpack_L2(fn_L2, time_L1, wv):
     Rrs = np.nan*np.ones([len(time_L1), len(wv)])
     exLwn = np.nan*np.ones([len(time_L1),len(wv)])
     rho = np.nan*np.ones(len(time_L1))
+    phi = np.nan*np.ones(len(time_L1))
     
     # load files in L2 format- L2 subscript indicates matrices are undersize
     if 'Rrs' in L2['L2'].__dict__.keys():
@@ -110,6 +111,7 @@ def unpack_L2(fn_L2, time_L1, wv):
         rho_L2 = L2['L2'].rho 
         exLwn_L2 = L2['L2'].exLwn.data
         time_L2 = np.array(numeric_to_UTC_time(L2['L2'].gps.time)) 
+        phi_L2 = L2['L2'].phi
         
         # indicies in L1 time that match L2 time (i.e. pass overall QC)
         L1_matches = np.intersect1d(time_L1, time_L2, return_indices = True)[1]
@@ -118,8 +120,9 @@ def unpack_L2(fn_L2, time_L1, wv):
             Rrs[int(L1_matches[i]),:] = Rrs_L2[i,:] 
             exLwn[int(L1_matches[i]),:] = exLwn_L2[i,:] 
             rho[int(L1_matches[i])] = rho_L2[i]
-        
-    return qc_mask, Rrs, exLwn, rho
+            phi[int(L1_matches[i])] = phi_L2[i]
+            
+    return qc_mask, Rrs, exLwn, rho, phi
 
 
 def numeric_to_UTC_time(time_num):
@@ -283,10 +286,13 @@ def append_to_summary(dict_list):
      windspeed_mean = np.nanmean(windspeed)
      windspeed_std = np.nanstd(windspeed)
      
+     phi_mean = np.nanmean(phi)
+     
      new_row = {'station':  stations[i], 'env_index_mean': env_index_mean, 
                 'env_index_std': env_index_std, 'number_Rrs': N_rrs,
                  'percent_Rrs': P_rrs, 'CV_rrs_band_av': CV_rrs_band_av,
-                 'windspeed_mean': windspeed_mean, 'windspeed_std':  windspeed_std}
+                 'windspeed_mean': windspeed_mean, 'windspeed_std':  windspeed_std,
+                 'phi_mean' : phi_mean}
      dict_list.append(new_row)
      
      return dict_list
@@ -296,7 +302,7 @@ def conditions_summaryplots(df_overall):
 
      fig, ax = plt.subplots()
      plt.figure(figsize=(20,20))
-     plt.rc('font', size=12)   
+     plt.rc('font', size=20)   
      plt.title('Dependence of Rrs variability on cloudiness (station average values)')
      colors = cm.jet(np.linspace(0, 1, len(df_overall)))
      for i in range(len(df_overall)):
@@ -306,9 +312,10 @@ def conditions_summaryplots(df_overall):
      plt.ylabel('$\pi$Li(400)/Es(400): (cloudiness index)')
      plt.ylim(0,1)
      plt.xlim(0,10)
+     plt.savefig('cloudiness.png')
      
      plt.figure(figsize=(20,20))
-     plt.rc('font', size=12)   
+     plt.rc('font', size=18)   
      plt.title('Dependence of Rrs variability on windspeed (station average values)')
      colors = cm.jet(np.linspace(0, 1, len(df_overall)))
      for i in range(len(df_overall)):
@@ -318,6 +325,7 @@ def conditions_summaryplots(df_overall):
      plt.ylabel('Windspeed [m/s]')
      plt.ylim(0,6)
      plt.xlim(0,10)   
+     plt.savefig('windspeed.png')
  
      return
     
@@ -343,21 +351,20 @@ if __name__ == '__main__':
 
     # initialize station sub directories
     stations =  sorted(os.listdir(dir_L1)) # each subdirectory is a station
-    # for i in range(len(stations)):
-       # os.mkdir(dir_write + str(stations[i]))
+   #  for i in range(1):
+     #   os.mkdir(dir_write + str(stations[i]))
       
     dict_list = []   # list to append summaries
-    for i in range(3): # process each station in sequence
-    
+    for i in range(len(stations)): # process each station in sequence
         # access  filenames (hsas data structures) of ith station - cal and L0 currently not used
-        #  fn_cal = glob.glob(dir_cal + stations[i]  + '/*dat*')
+        # fn_cal = glob.glob(dir_cal + stations[i]  + '/*dat*')
         fn_L0 = glob.glob(dir_L0 + stations[i]  + '/*mat*')        
         fn_L1 = glob.glob(dir_L1 + stations[i]  + '/*mat*') #
         fn_L2 = glob.glob(dir_L2 + stations[i]  + '/*mat*')
         
         # unpack variables from L1 and L2 data data stuctures in np array format
         time, windspeed, Es, Lt, Li, Es_int_time, Lt_int_time, Li_int_time, wv = unpack_L1(fn_L1) 
-        qc_mask, Rrs, exLwn, rho = unpack_L2(fn_L2, time, wv) # L2 data is just where rrs passes QC - it is nan-padded to match length of L1 data
+        qc_mask, Rrs, exLwn, rho, phi = unpack_L2(fn_L2, time, wv) # L2 data is just where rrs passes QC - it is nan-padded to match length of L1 data
         
 
         # spectral downsampling to OLCI: putput element 0 is np array, 1 is dataframe format
@@ -414,7 +421,8 @@ if __name__ == '__main__':
         
         dict_list = append_to_summary(dict_list)
     
-    # overall summary - used for station selection    
+    
+        #  overall summary - used for station selection    
     ov_summary_path = dir_write +  '/' + 'FICE_conditions_summary.csv'
     df_overall = pd.DataFrame.from_dict(dict_list)  
     df_overall.to_csv(ov_summary_path, na_rep ='NaN', index = False)
