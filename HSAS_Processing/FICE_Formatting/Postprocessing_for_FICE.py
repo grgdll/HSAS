@@ -125,6 +125,39 @@ def unpack_L2(fn_L2, time_L1, wv):
     return qc_mask, Rrs, exLwn, rho, phi
 
 
+def unpack_L2_nomask(fn_L2):
+    ''' Unpacks relevant L2 data in np array format. No mask - just includes 
+    timestamps where Rrs retreivals were successful'''
+  
+    L2 = io.loadmat(fn_L2[0], squeeze_me = True, struct_as_record = False) 
+    
+    time = np.array(numeric_to_UTC_time(L2['L2'].gps.time)) 
+    wv = L2['L2'].wv 
+    
+    # (Ir)radiance
+    Es = 10*L2['L2'].instr.Es.data   # Factor 10 coverts from mw cm^-2 um^-1 to mW m^-2 nm^-1 
+    Li = 10*L2['L2'].instr.Li.data 
+    Lt = 10*L2['L2'].instr.Lt.data 
+    
+    if 'int_time_sec' in L2['L2'].instr.Es.__dict__.keys():
+        Es_int_t = L2['L2'].instr.Es.int_time_sec[0] # integration time seconds - assumes constant for each station (which it is)
+        Lt_int_t = L2['L2'].instr.Lt.int_time_sec[0]
+        Li_int_t = L2['L2'].instr.Li.int_time_sec[0]
+    else:
+        Es_int_t = np.nan
+        Lt_int_t = np.nan
+        Li_int_t = np.nan
+     
+    # Rrs
+    Rrs = L2['L2'].Rrs.data 
+    exLwn = 10*L2['L2'].exLwn.data # Factor 10 coverts from mw cm^-2 um^-1 to mW m^-2 nm^-1 
+
+    windspeed = L2['L2'].appwind_spd
+    rho = L2['L2'].rho     
+        
+    return time, wv, Es, Li, Lt, Es_int_t, Lt_int_t, Li_int_t, Rrs, exLwn, windspeed, rho
+
+
 def numeric_to_UTC_time(time_num):
      '''Function to convert numeric time (octave output for Hsas spectra) to UTC 
      - based on Junfangs' uncertainty code'''
@@ -132,7 +165,7 @@ def numeric_to_UTC_time(time_num):
      time_UTC = []
      for i in range(len(time_num)):
          time_UTC_i = (datetime.datetime.fromordinal(int(time_num[i])) + 
-                        datetime.timedelta(seconds = 86400*(time_num[i] - float(int(time_num[i])))) - datetime.timedelta(days=365))
+                        datetime.timedelta(seconds = 86400*(time_num[i] - float(int(time_num[i])))) - datetime.timedelta(days=366))
          
          time_UTC.append(time_UTC_i)
      
@@ -151,8 +184,8 @@ def hyperspec_to_OLCIbands(S, time, wv, srf, srf_bands, srf_wv):
             wv_j = wv[np.isnan(S[j,:]) == 0] # remove wl bins with nan padding (rq. for interpolation functions)
             S_j = S[j, np.isnan(S[j,:]) == 0]    
             for k in range(len(srf_bands)): # loop over spectral bands
-                first_wv = wv[int(np.where(np.isnan(S[j,:])==0)[0][0])]  # first and last wavelengths
-                last_wv = wv[int(np.where(np.isnan(S[j,:])==0)[0][-1])]
+                first_wv = wv[int(np.where(np.isnan(S[j,:]) == 0)[0][0])]  # first and last wavelengths
+                last_wv = wv[int(np.where(np.isnan(S[j,:]) == 0)[0][-1])]
                 if np.min(srf_wv[k]) > first_wv and np.max(srf_wv[k]) < last_wv: # tests data exists in band
                     interp_funct = interp1d(wv_j, S_j, kind = 'cubic') # interpolate to same wv interval as OLCI
                     S_j_interp = interp_funct(srf_wv[k]) # oversample on same wv range as OLCI SRF 
@@ -219,7 +252,7 @@ def write_spectra(D_df,sensor_info, fpath):
     ''' writes downsampled spectra to csvfile'''
     
     # create headers using sensor info dictionary
-    with open(fpath, 'w', encoding='UTF8') as f:
+    with open(fpath, 'w', encoding = 'UTF8') as f:
         writer = csv.writer(f)
         for i in range(len(sensor_info)):
             row_i = str('# '  + list(sensor_info.keys())[i] + ': ' + str(list(sensor_info.values())[i]))
@@ -256,7 +289,7 @@ def write_station_summary(summary_path, time, Es_av, Lt_av, Li_av, Rrs_av, exLwn
         writer.writerow([''.join(row)])
         row = str('#reflectance_calculation equation: Aeronet OC lookup table based on Zibordi et al. 2009"')
         writer.writerow([''.join(row)])
-        row = str('units: {"reflectance":["Wavelength [nm]","Reflectance [ / sr"],"es":["Wavelength [nm]","Irradiance [mW / (cm^2 * 10^-6 m)]"],"lt":["Wavelength [nm]","Radiance [mW / (sr * cm^2 * 10^-6 m)]"],"li":["Wavelength [nm]","Radiance [mW / (sr cm^2 * 10^-6 m)]"]}')
+        row = str('units: {"reflectance":["Wavelength [nm]","Reflectance [sr^-1],"es":["Wavelength [nm]","Irradiance [mW m^-2 nm^-1]"],"lt":["Wavelength [nm]","Radiance [mW m^-2 nm^-1 sr^-1]"],"li":["Wavelength [nm]","Radiance [mW m^2 nm^-1 sr^-1)]", "exLnw":["Wavelength [nm]","Radiance [mW m^2 nm^-1 sr^-1)]"]}')
         writer.writerow([''.join(row)])
     
     # append station average dataframes for each sectrum to csv file -
@@ -275,57 +308,61 @@ def append_to_summary(dict_list):
      # cloudiness index - pi*Li(400)/Es(400)
      env_index = np.pi*np.array(Li_OLCI[1]['400.0'])/np.array(Es_OLCI[1]['400.0']) 
      env_index_mean = np.nanmean(env_index)
-     env_index_std =  np.nanstd(env_index)
+     # env_index_std =  np.nanstd(env_index)
      
      N_rrs = np.sum(~np.isnan(np.array(Rrs_OLCI[1]['400.0']))) # no. of rrs retrievals
-     P_rrs = 100*N_rrs/len(Rrs_OLCI[1]['400.0'])     # % of rrs retreivals
+     # P_rrs = 100*N_rrs/len(Rrs_OLCI[1]['400.0'])     # % of rrs retreivals
      
      CV_rrs = np.nanstd(Rrs_OLCI[1],axis=0)/np.nanmean(Rrs_OLCI[1],axis=0)
      CV_rrs_band_av = 100*np.nanmean(CV_rrs[0:6])  # % of rrs retreivals
      
      windspeed_mean = np.nanmean(windspeed)
-     windspeed_std = np.nanstd(windspeed)
+     # windspeed_std = np.nanstd(windspeed)
      
-     phi_mean = np.nanmean(phi)
-     
-     new_row = {'station':  stations[i], 'env_index_mean': env_index_mean, 
-                'env_index_std': env_index_std, 'number_Rrs': N_rrs,
-                 'percent_Rrs': P_rrs, 'CV_rrs_band_av': CV_rrs_band_av,
-                 'windspeed_mean': windspeed_mean, 'windspeed_std':  windspeed_std,
-                 'phi_mean' : phi_mean}
+     # select data based on environmental conditions
+     if  CV_rrs_band_av < 2 and env_index_mean < 0.4: # good data
+         env_mask = 'Valid'
+     else:                                            # poor data
+         env_mask = 'Not Valid'
+    
+     new_row = {'station':  stations[i], 'start time [UTC]': str(time[0]),
+                'end time [UTC]': str(time[-1]), 'mask':  env_mask, 'env_index_mean': env_index_mean, 
+                 'number_Rrs': N_rrs, 'CV_rrs_band_av': CV_rrs_band_av,
+                 'windspeed_mean': windspeed_mean}
+ 
      dict_list.append(new_row)
-     
+    
      return dict_list
  
     
 def conditions_summaryplots(df_overall):
 
      fig, ax = plt.subplots()
-     plt.figure(figsize=(20,20))
+     plt.figure(figsize=(20, 20))
      plt.rc('font', size=20)   
      plt.title('Dependence of Rrs variability on cloudiness (station average values)')
      colors = cm.jet(np.linspace(0, 1, len(df_overall)))
      for i in range(len(df_overall)):
          plt.scatter(df_overall['CV_rrs_band_av'][i], df_overall['env_index_mean'][i],c=colors[i], cmap='jet',label = df_overall['station'][i])
-     plt.legend(labels = df_overall['station'], ncol=2)
+     plt.legend(labels = df_overall['station'], ncol=2,fontsize=20)
      plt.xlabel('CV[Rrs]: mean for OLCI bands 1-6 [%]')
      plt.ylabel('$\pi$Li(400)/Es(400): (cloudiness index)')
      plt.ylim(0,1)
      plt.xlim(0,10)
-     plt.savefig('cloudiness.png')
+     plt.savefig('FICE_cloudiness_CVRrs.png')
      
-     plt.figure(figsize=(20,20))
-     plt.rc('font', size=18)   
+     plt.figure(figsize = (20, 20))
+     plt.rc('font', size=20)   
      plt.title('Dependence of Rrs variability on windspeed (station average values)')
      colors = cm.jet(np.linspace(0, 1, len(df_overall)))
      for i in range(len(df_overall)):
          plt.scatter(df_overall['CV_rrs_band_av'][i], df_overall['windspeed_mean'][i],c=colors[i], cmap='jet',label = df_overall['station'][i])
-     plt.legend(labels = df_overall['station'], ncol=2)
+     plt.legend(labels = df_overall['station'], ncol=2, fontsize=20)
      plt.xlabel('CV[Rrs]: mean for OLCI bands 1-6 [%]')
      plt.ylabel('Windspeed [m/s]')
      plt.ylim(0,6)
      plt.xlim(0,10)   
-     plt.savefig('windspeed.png')
+     plt.savefig('FICE_windspeed_CVRrs.png')
  
      return
     
@@ -333,7 +370,7 @@ def conditions_summaryplots(df_overall):
     
 if __name__ == '__main__':
 
-
+    
     # subdirectories to read data
     dir_main = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/'
     dir_cal = dir_main + 'Processed_TPcorrection/Calibrated/'
@@ -350,12 +387,13 @@ if __name__ == '__main__':
     srf, srf_wv, srf_bands = unpack_srf(dir_srf)
 
     # initialize station sub directories
-    stations =  sorted(os.listdir(dir_L1)) # each subdirectory is a station
-   #  for i in range(1):
-     #   os.mkdir(dir_write + str(stations[i]))
+    stations = sorted(os.listdir(dir_L1)) # each subdirectory is a station
+    #  for i in range(1):
+    #   os.mkdir(dir_write + str(stations[i]))
       
     dict_list = []   # list to append summaries
     for i in range(len(stations)): # process each station in sequence
+       
         # access  filenames (hsas data structures) of ith station - cal and L0 currently not used
         # fn_cal = glob.glob(dir_cal + stations[i]  + '/*dat*')
         fn_L0 = glob.glob(dir_L0 + stations[i]  + '/*mat*')        
@@ -363,9 +401,9 @@ if __name__ == '__main__':
         fn_L2 = glob.glob(dir_L2 + stations[i]  + '/*mat*')
         
         # unpack variables from L1 and L2 data data stuctures in np array format
-        time, windspeed, Es, Lt, Li, Es_int_time, Lt_int_time, Li_int_time, wv = unpack_L1(fn_L1) 
-        qc_mask, Rrs, exLwn, rho, phi = unpack_L2(fn_L2, time, wv) # L2 data is just where rrs passes QC - it is nan-padded to match length of L1 data
-        
+        # time, windspeed, Es, Lt, Li, Es_int_time, Lt_int_time, Li_int_time, wv = unpack_L1(fn_L1)
+        # qc_mask, Rrs, exLwn, rho, phi = unpack_L2(fn_L2, time, wv) # L2 data is just where rrs passes QC - it is nan-padded to match length of L1 data
+        time, wv, Es, Li, Lt, Es_int_t, Lt_int_t, Li_int_t, Rrs, exLwn, windspeed, rho =  unpack_L2_nomask(fn_L2)
 
         # spectral downsampling to OLCI: putput element 0 is np array, 1 is dataframe format
         Es_OLCI = hyperspec_to_OLCIbands(Es, time, wv, srf, srf_bands, srf_wv)  
@@ -379,28 +417,33 @@ if __name__ == '__main__':
         # collate sensor info and write downsampled spectra to csv files
         wv_string = '(' + str(wv[0]) + ', ' + str(wv[-1]) + ', ' + str(wv[1]-wv[0]) +')'
         Es_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '2027A', 
-                   'Integration time': str(Es_int_time), 
-                   'Wavelength scale (max, min, spacing: all post interpolation)':  wv_string}
+                   'Integration time': str(Es_int_t) + ' [sec]', 
+                   'Wavelength scale (max, min, spacing: all post interpolation)':  wv_string,
+                   'Units':  ' [mW m^-2 nm^-1]'}
                 
         Lt_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '464', 
-                   'Integration time': str(Lt_int_time), 
-                   'Wavelength scale (max, min, spacing: all post interpolation)': wv_string}
+                   'Integration time': str(Lt_int_t) + ' [sec]', 
+                   'Wavelength scale (max, min, spacing: all post interpolation)': wv_string,
+                   'Units':  ' [mW m^-2 nm^-1 sr^-1]'}
                  
         Li_info = {'Make': 'Seabird', 'Model': 'HypserSAS', 'Serial number': '2054A', 
-                   'Integration time': str(Li_int_time), 
-                   'Wavelength scale (max, min, spacing: all post interpolation)': wv_string}
+                   'Integration time': str(Li_int_t) + ' [sec]', 
+                   'Wavelength scale (max, min, spacing: all post interpolation)': wv_string,
+                   'Units':  ' [mW m^-2 nm^-1 sr^-1]'}
                        
         Rrs_info = {'Make': 'Seabird', 'Model': 'HypserSAS',
-                    'Wavelength scale (max, min, spacing: all post interpolation)': wv_string}
+                    'Wavelength scale (max, min, spacing: all post interpolation)': wv_string,
+                    'Units':  ' [sr^-1]'}
                         
         exLwn_info = {'Make': 'Seabird', 'Model': 'HypserSAS',
-                      'Wavelength scale (max, min, spacing: all post interpolation)': wv_string}
+                      'Wavelength scale (max, min, spacing: all post interpolation)': wv_string,
+                      'Units':  ' [mW m^-2 nm^-1 sr^-1]'}
                         
-        Es_path = dir_write +  stations[i] + '/' + 'Es_' + stations[i] + '.csv'
-        Lt_path = dir_write +  stations[i] + '/' + 'Lt_' + stations[i] + '.csv'
-        Li_path = dir_write +  stations[i] + '/' + 'Li_' + stations[i] + '.csv'
-        Rrs_path = dir_write +  stations[i] + '/' + 'reflectance_' + stations[i] + '.csv'
-        exLwn_path = dir_write +  stations[i] + '/' + 'nLw_' + stations[i] + '.csv'
+        Es_path = dir_write + stations[i] + '/' + 'Es_' + stations[i] + '.csv'
+        Lt_path = dir_write + stations[i] + '/' + 'Lt_' + stations[i] + '.csv'
+        Li_path = dir_write + stations[i] + '/' + 'Li_' + stations[i] + '.csv'
+        Rrs_path = dir_write + stations[i] + '/' + 'reflectance_' + stations[i] + '.csv'
+        exLwn_path = dir_write + stations[i] + '/' + 'nLw_' + stations[i] + '.csv'
         
         write_spectra(Es_OLCI[1], Es_info, Es_path)  # Es_OLCI[1] etc, is pandas dataframe format
         write_spectra(Lt_OLCI[1], Lt_info, Lt_path)
@@ -416,18 +459,16 @@ if __name__ == '__main__':
         Rrs_av = station_averages_dataframe(Rrs_OLCI[0],'reflectance', stations[i], time, windspeed, srf_bands) 
         exLwn_av = station_averages_dataframe(exLwn_OLCI[0],'nLw', stations[i], time, windspeed, srf_bands)
         
-        summary_path = dir_write +  stations[i] + '/' + 'Summary_' + stations[i] + '.csv'
-        write_station_summary(summary_path, time, Es_av, Lt_av, Li_av, Rrs_av, exLwn_av) 
-        
+        summary_path = dir_write + stations[i] + '/' + 'Summary_' + stations[i] + '.csv'
+        write_station_summary(summary_path, time, Es_av, Lt_av, Li_av, Rrs_av, exLwn_av)  
         dict_list = append_to_summary(dict_list)
-    
+        
     
         #  overall summary - used for station selection    
     ov_summary_path = dir_write +  '/' + 'FICE_conditions_summary.csv'
     df_overall = pd.DataFrame.from_dict(dict_list)  
     df_overall.to_csv(ov_summary_path, na_rep ='NaN', index = False)
         
-
     conditions_summaryplots(df_overall)
 
 
