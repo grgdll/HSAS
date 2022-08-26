@@ -325,7 +325,7 @@ def append_to_summary(dict_list):
      else:                                            # poor data
          env_mask = 'Not Valid'
     
-     new_row = {'station':  stations[i], 'start time [UTC]': str(time[0]),
+     new_row = {'station':  str(station_index[i]) + '_' + str(stations[i]), 'start time [UTC]': str(time[0]),
                 'end time [UTC]': str(time[-1]), 'mask':  env_mask, 'env_index_mean': env_index_mean, 
                  'number_Rrs': N_rrs, 'CV_rrs_band_av': CV_rrs_band_av,
                  'windspeed_mean': windspeed_mean}
@@ -338,31 +338,31 @@ def append_to_summary(dict_list):
 def conditions_summaryplots(df_overall):
 
      fig, ax = plt.subplots()
-     plt.figure(figsize=(20, 20))
+     plt.figure(figsize=(30, 20))
      plt.rc('font', size=20)   
      plt.title('Dependence of Rrs variability on cloudiness (station average values)')
      colors = cm.jet(np.linspace(0, 1, len(df_overall)))
      for i in range(len(df_overall)):
          plt.scatter(df_overall['CV_rrs_band_av'][i], df_overall['env_index_mean'][i],c=colors[i], cmap='jet',label = df_overall['station'][i])
-     plt.legend(labels = df_overall['station'], ncol=2,fontsize=20)
+     plt.legend(labels = df_overall['station'], ncol=2,fontsize=18)
      plt.xlabel('CV[Rrs]: mean for OLCI bands 1-6 [%]')
      plt.ylabel('$\pi$Li(400)/Es(400): (cloudiness index)')
      plt.ylim(0,1)
      plt.xlim(0,10)
-     plt.savefig('FICE_cloudiness_CVRrs.png')
+     plt.savefig(dir_write + '/FICE_cloudiness_CVRrs.png')
      
-     plt.figure(figsize = (20, 20))
+     plt.figure(figsize = (30, 20))
      plt.rc('font', size=20)   
      plt.title('Dependence of Rrs variability on windspeed (station average values)')
      colors = cm.jet(np.linspace(0, 1, len(df_overall)))
      for i in range(len(df_overall)):
          plt.scatter(df_overall['CV_rrs_band_av'][i], df_overall['windspeed_mean'][i],c=colors[i], cmap='jet',label = df_overall['station'][i])
-     plt.legend(labels = df_overall['station'], ncol=2, fontsize=20)
+     plt.legend(labels = df_overall['station'], ncol=2, fontsize=18)
      plt.xlabel('CV[Rrs]: mean for OLCI bands 1-6 [%]')
      plt.ylabel('Windspeed [m/s]')
      plt.ylim(0,6)
      plt.xlim(0,10)   
-     plt.savefig('FICE_windspeed_CVRrs.png')
+     plt.savefig(dir_write + '/FICE_windspeed_CVRrs.png')
  
      return
     
@@ -387,9 +387,11 @@ if __name__ == '__main__':
     srf, srf_wv, srf_bands = unpack_srf(dir_srf)
 
     # initialize station sub directories
-    stations = sorted(os.listdir(dir_L1)) # each subdirectory is a station
-    #  for i in range(1):
-    #   os.mkdir(dir_write + str(stations[i]))
+    stations = sorted(os.listdir(dir_L0))
+    station_index = np.arange(0,78,1)
+    station_index[70:-1]=np.arange(71,78,1) # raw data from station 70 _134000 is incomplete - cant process
+    for i in range(len(stations)):
+        os.mkdir(dir_write + str(station_index[i]) + '_' + str(stations[i]))
       
     dict_list = []   # list to append summaries
     for i in range(len(stations)): # process each station in sequence
@@ -439,11 +441,11 @@ if __name__ == '__main__':
                       'Wavelength scale (max, min, spacing: all post interpolation)': wv_string,
                       'Units':  ' [mW m^-2 nm^-1 sr^-1]'}
                         
-        Es_path = dir_write + stations[i] + '/' + 'Es_' + stations[i] + '.csv'
-        Lt_path = dir_write + stations[i] + '/' + 'Lt_' + stations[i] + '.csv'
-        Li_path = dir_write + stations[i] + '/' + 'Li_' + stations[i] + '.csv'
-        Rrs_path = dir_write + stations[i] + '/' + 'reflectance_' + stations[i] + '.csv'
-        exLwn_path = dir_write + stations[i] + '/' + 'nLw_' + stations[i] + '.csv'
+        Es_path = dir_write + str(station_index[i]) + '_' + str(stations[i]) + '/' + 'Es_' + str(station_index[i]) + '.csv'
+        Lt_path = dir_write + str(station_index[i]) + '_' + str(stations[i]) + '/' + 'Lt_' + str(station_index[i]) + '.csv'
+        Li_path = dir_write + str(station_index[i]) + '_' + str(stations[i]) + '/' + 'Li_' + str(station_index[i]) + '.csv'
+        Rrs_path = dir_write + str(station_index[i]) + '_' + str(stations[i]) + '/' + 'reflectance_' + str(station_index[i]) + '.csv'
+        exLwn_path = dir_write + str(station_index[i]) + '_' + str(stations[i]) + '/' + 'nLw_' + str(station_index[i]) + '.csv'
         
         write_spectra(Es_OLCI[1], Es_info, Es_path)  # Es_OLCI[1] etc, is pandas dataframe format
         write_spectra(Lt_OLCI[1], Lt_info, Lt_path)
@@ -459,7 +461,7 @@ if __name__ == '__main__':
         Rrs_av = station_averages_dataframe(Rrs_OLCI[0],'reflectance', stations[i], time, windspeed, srf_bands) 
         exLwn_av = station_averages_dataframe(exLwn_OLCI[0],'nLw', stations[i], time, windspeed, srf_bands)
         
-        summary_path = dir_write + stations[i] + '/' + 'Summary_' + stations[i] + '.csv'
+        summary_path = dir_write + str(station_index[i]) + '_' + str(stations[i]) + '/' + 'Summary_' + str(station_index[i]) + '.csv'
         write_station_summary(summary_path, time, Es_av, Lt_av, Li_av, Rrs_av, exLwn_av)  
         dict_list = append_to_summary(dict_list)
         

@@ -3,6 +3,7 @@ function d = rd_anemometer_FICE(fn)
 % Other metadata fields are available in xls meteo file.
 
     pkg load io
+
     [data, headers] = xlsread(fn);
 
     d.time = data(:,1) + 693960; - 1/24; % [decimal days] 693960 converts between excel and octave time, -1/24 accounts for UTC +1 to UTC 
