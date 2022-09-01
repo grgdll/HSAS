@@ -29,7 +29,7 @@
 	
 
 
-# Set wavelength range
+# Set wavelength range (note: this is not the raw wavelength - it is interpolated)
    wv = [350:2:860]';  #Consistent with JRC format
 
 # main dir
@@ -82,12 +82,14 @@ DIR_CAL = [MAIN_DIR "HyperSAS_config/"];
 DIN_CALS_PRE = [DIR_CAL "Pre/"];
 DIN_CALS_POST = [DIR_CAL "Post/"];
 DIN_StrayLight = [MAIN_DIR "HyperSAS_config/Straylight/"];
-DIN_Non_Linearity = [MAIN_DIR "HyperSAS_config/Non-linearity/non-linearity coefficients.xlsx"]; 
+DIN_Non_Linearity = [MAIN_DIR "HyperSAS_config/Non-linearity/"]; 
 
+NL_files_pre = {"Pre/cp_radcal_SAT2027.txt", "Pre/cp_radcal_SAT2054.txt", "Pre/cp_radcal_SAT0464.txt"};
+NL_files_post = {"Post/cp_radcal_SAT2027.txt", "Post/cp_radcal_SAT2054.txt", "Post/cp_radcal_SAT0464.txt"};
 #-Flags to check if do non-linearity, temperature, Straylight corrections
-FLAG_NON_LINEARITY = 0; % 0: do not apply correction
+FLAG_NON_LINEARITY = 1; % 0: do not apply correction, 1: apply correction
 FLAG_TEMPERATURE = 0;
-FLAG_STRAY_LIGHT = 0;
+FLAG_STRAY_LIGHT = 1;
 
 #-ACS data Path
 FN_ACS = [MAIN_DIR, "AC-9/ACStoHSAS_sentine.txt"];

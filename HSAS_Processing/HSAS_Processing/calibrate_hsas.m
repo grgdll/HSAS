@@ -52,23 +52,20 @@ for iSN = 1:length(sn)
 
         if length(fncal)>2 # this is for when there are more cal files for one instrument (e.g., CAL_G SN223)
             fncal = sort(fncal){1};
-        else  # tjor - else statement modified for FICE - I think we just want to read pre/post in turn for each 	 sensor?
+        elseif length(fncal)==1   # tjor - else statement modified for FICE - I think we just want to read pre/post in turn for each 	 sensor?
             fncal = fncal{1};
         endif
         
 
         # read and store cal files
         cal{ical} = hsas_rd_satlantic_cal(fncal);
-        
         offset_(ical,:) = cal{ical}.offset;
         gain_(ical,:) = cal{ical}.gain;
         wv_(ical,:) = cal{ical}.wv;
         int_time_(ical,:) = cal{ical}.int_time_wv;       
 
     endfor
-
-
-    
+          
     # plot  post/pre-1 cal coefficients    
 	if length(cal)==2    
 
@@ -103,7 +100,7 @@ for iSN = 1:length(sn)
         print("-dpng", fnout);
 	endif 
     
-        
+       
     ## compute and write average cal file (+ uncertainty) for this instrument SN
         # compute stats of cal coeffs
 		if length(cal)==2
@@ -124,6 +121,7 @@ for iSN = 1:length(sn)
             
             wv = mean(wv_);
             
+            
             if ical>1 & (wv_(1,20) != wv_(2,20))%~all(std(wv_,[],1)<=eps)
                 disp('wavelengths have changed between calibrations!!!');
                 keyboard
@@ -142,7 +140,7 @@ for iSN = 1:length(sn)
             int_time = mean(int_time_);
   
             wv = wv_;
-			
+	
 		endif	
 			
 			
@@ -155,7 +153,7 @@ for iSN = 1:length(sn)
        	fnout_cal = [DIR_CAL CRUISE "/mean_" radiometers{iSN} sn{iSN} ".cal"]   ;    
        	save("-mat-binary", fnout_cal, "cal", "gain", "offset", "wv", "int_time");
         
-        
+   
 	 	
  % Read serial number and sensor type
 	rad_sn = cell2struct(sn,radiometers,2);
@@ -163,16 +161,36 @@ for iSN = 1:length(sn)
         sensor_id = sn{iSN};	
 	
   ####### Read non-linearity correction coefficients ##########
-  if FLAG_NON_LINEARITY == 1
+ if FLAG_NON_LINEARITY == 1
 	  pkg load io
 	  #---radiometer related to sn
-	  disp('Loading Non-linearity correction coefficients....')  
-	  coeff_LI = xlsread(DIN_Non_Linearity,rad_sn.LI);
-	  coeff_LT = xlsread(DIN_Non_Linearity,rad_sn.LT);
-	  coeff_ES = xlsread(DIN_Non_Linearity,rad_sn.ES);
+	  	  disp('Loading Non-linearity correction coefficients....')  
+	 
+	  # pre deployment
+	  data_range = [1346,1,1525,2]; # Each FICE 2022 Straylight file has different format - data_range finds the SL wavelength and coefficients
+	  coeff_ES_pre = dlmread([DIN_Non_Linearity NL_files_pre{1}],'', data_range);
+	  data_range = [1485,1,1664,2];
+	  coeff_LI_pre = dlmread([DIN_Non_Linearity NL_files_pre{2}],'', data_range);
+	  data_range = [1485,1,1664,2];
+	  coeff_LT_pre = dlmread([DIN_Non_Linearity NL_files_pre{3}],'', data_range);
+	  
+	  # post deployment
+	  data_range = [116,1,295,2]; # 
+	  coeff_ES_post = dlmread([DIN_Non_Linearity NL_files_post{1}],'', data_range);
+	  data_range = [255,1,434,2];
+	  coeff_LI_post = dlmread([DIN_Non_Linearity NL_files_post{2}],'', data_range);
+	  data_range = [255,1,434,2];
+	  coeff_LT_post = dlmread([DIN_Non_Linearity NL_files_post{3}],'', data_range);
+	   
+	  # average coeffcients
+	  coeff_ES =  0.5*(coeff_ES_pre +  coeff_ES_post)
+	  coeff_LI =  0.5*(coeff_LI_pre +  coeff_LI_post)
+	  coeff_LT =  0.5*(coeff_LT_pre +  coeff_LT_post)
+	  
+	 # coeff_LI(:,1) is wavelength bin, coeff_LI(:,1:2) is coefficient value
 	  non_linearity_coeff = struct('coeff_LI',coeff_LI(:,1:2),'coeff_LT',coeff_LT(:,1:2),'coeff_ES',coeff_ES(:,1:2));
   else
-  	 non_linearity_coeff = struct('coeff_LI',nan,'coeff_LT',nan,'coeff_ES',nan);
+  	 #non_linearity_coeff = struct('coeff_LI',nan,'coeff_LT',nan,'coeff_ES',nan);
   endif
     
 		
@@ -189,13 +207,14 @@ for iSN = 1:length(sn)
 	  if sn_rad.(sensor_id) == 'LT'
 	  	fn = [DIR_SLCORR, FN_SLCORR_LT];
 	  endif
-
-	  D = load(fn);
+	  keyboard
+	  D = dlmread(fn,'',[50,0,305,256]); % tjor - D is 256 X 256 matrix starting on line 50
 	  D_SL = D / norm(D);
   else
   	 D = D_SL = nan;
  endif
   
+
 
 		
 	###### calibrate data from this instrument
@@ -231,6 +250,7 @@ for iSN = 1:length(sn)
 				    endif            
 			
 	            ### apply cal
+	 
 	                ff = [out.instru "cal"];
 	                out.cal_file = fnout_cal;
                     out.(ff) = hsas_calibrate_with_correction(sn{iSN}, out.wv, L_CountsLightDat=out.(out.instru), L_CalDarkDat=offset.mean, gain.mean,immers_coeff=1, it_1=int_time, it_2=out.int_time_sec, rad_sn, sn_rad, non_linearity_coeff,D_SL,FLAG_NON_LINEARITY,FLAG_STRAY_LIGHT);
