@@ -13,8 +13,8 @@
 # dates to be processed
 	%DAY_START = "195"; %14 july %AMT proc uses jday
 	%DAY_STOP = "202"; %21 july
-	DAY_START = "20220713"; %13 july % fice proc uses datestr
-	DAY_STOP = "20220721"; %21 july
+	DAY_START = "20220713"; % 13 july % fice proc uses datestr
+	DAY_STOP = "20220721";  % 21 july
 
 # cruise name
 	CRUISE = "FICE22";
@@ -24,8 +24,8 @@
 	radiometers = {"ES", "LI", "LT"};#  (similar instrument must be listed one after the other)
 	sn = {"2027A", "2054A", "464"};
 	file_ext = {"H[ES][DE]", "*H[LS][DL]", "*H[LS][DL]"}; # wildcards to read files for each instrument
-	cal_files_pre = {"HSE2027A.cal", "HSL2054A.cal", "HSL464.cal"};
-	cal_files_post = {"HSE2027A.cal", "HSL2054A.cal", "HSL464.cal"};
+	cal_files_pre = {"SAT2027.cal", "SAT2054.cal", "SAT464.cal"};
+	cal_files_post = {"SAT2027.cal", "SAT2054.cal", "SAT464.cal"};
 	
 
 
@@ -69,9 +69,9 @@ FN_TEMPCORR_LT = "PML_8-010-20-thermal-0223.csv";
 FN_TEMPCORR_LI = "PML_8-010-20-thermal-0222.csv";
 
 DIR_SLCORR = [MAIN_DIR "HyperSAS_config/Straylight/"];
-FN_SLCORR_ES = "258.txt";# File name of Straylight correction factors for ES
-FN_SLCORR_LT = "223.txt";
-FN_SLCORR_LI = "222.txt";
+FN_SLCORR_ES = "cp_straylight_SAT2027.txt";# File name of Straylight correction factors for ES
+FN_SLCORR_LT = "cp_straylight_SAT464.txt"
+FN_SLCORR_LI = "cp_straylight_SAT2054.txt"
 
 
 DIN_HSAS = [MAIN_DIR "Raw/RawExtracted/"];
