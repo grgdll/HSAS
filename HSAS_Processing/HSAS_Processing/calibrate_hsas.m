@@ -48,12 +48,15 @@ for iSN = 1:length(sn)
         % fncal = glob([DIR_CAL din_cals{ical} "*" SN{iSN} "*.cal"]);
         fncal = glob([din_cals{ical} "*" sn{iSN} "*.cal"]);
         
+
+
         if length(fncal)>2 # this is for when there are more cal files for one instrument (e.g., CAL_G SN223)
             fncal = sort(fncal){1};
-        elseif
-            fncal = fncal{2};
+        else  # tjor - else statement modified for FICE - I think we just want to read pre/post in turn for each 	 sensor?
+            fncal = fncal{1};
         endif
         
+
         # read and store cal files
         cal{ical} = hsas_rd_satlantic_cal(fncal);
         
@@ -64,7 +67,7 @@ for iSN = 1:length(sn)
 
     endfor
 
-    
+
     
     # plot  post/pre-1 cal coefficients    
 	if length(cal)==2    
@@ -153,7 +156,7 @@ for iSN = 1:length(sn)
        	save("-mat-binary", fnout_cal, "cal", "gain", "offset", "wv", "int_time");
         
         
-		
+	 	
  % Read serial number and sensor type
 	rad_sn = cell2struct(sn,radiometers,2);
         sn_rad = cell2struct(radiometers, sn, 2);

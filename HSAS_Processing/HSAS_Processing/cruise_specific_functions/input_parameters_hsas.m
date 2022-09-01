@@ -22,8 +22,8 @@
 # HSAS instruments serial numbers
 	INSTRUMENT = "hsas";
 	radiometers = {"ES", "LI", "LT"};#  (similar instrument must be listed one after the other)
-	sn = {"2027A", "2054A", "464"};
-	file_ext = {"H[ES][DE]", "*H[LS][DL]", "*H[LS][DL]"}; # wildcards to read files for each instrument
+	sn = {"2027", "2054", "464"};
+	file_ext = {"H[ES][DE]", "*H[LS][DL]", "*H[LS][DL]", "SAT"}; # wildcards to read files for each instrument
 	cal_files_pre = {"SAT2027.cal", "SAT2054.cal", "SAT464.cal"};
 	cal_files_post = {"SAT2027.cal", "SAT2054.cal", "SAT464.cal"};
 	
