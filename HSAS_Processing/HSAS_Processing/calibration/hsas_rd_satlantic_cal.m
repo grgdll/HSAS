@@ -1,5 +1,5 @@
 function cal = hsas_rd_satlantic_cal(fn, used_pixels)
-
+keyboard
     if (nargin == 1)
         used_pixels = 1:255;
     endif
@@ -77,7 +77,7 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
         
     endwhile
    
-    
+
     
     
     fclose(fid);

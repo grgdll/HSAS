@@ -111,6 +111,7 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
         
         
     endwhile
+    
    
    	% required from some Tartu cal formats (2027, 2054)
    	if ~strcmp(cal.sn,'0464') 

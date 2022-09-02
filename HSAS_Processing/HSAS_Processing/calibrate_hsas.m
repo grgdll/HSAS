@@ -181,7 +181,24 @@ for iSN = 1:length(sn)
 	  coeff_LI_post = dlmread([DIN_Non_Linearity NL_files_post{2}],'', data_range);
 	  data_range = [255,1,434,2];
 	  coeff_LT_post = dlmread([DIN_Non_Linearity NL_files_post{3}],'', data_range);
-	   
+	  
+	  
+	  keyboard
+	  figure(1, 'visible', 'off');
+          clf
+          hold on
+          subplot(121)
+          plot(cal{1}.wv, cal{2}.offset./cal{1}.offset-1, [";" datestr(cal{1}.date, "yyyy/mmm/dd") "\n" datestr(cal{2}.date, 	         "yyyy/mmm/dd") ";"])
+          % ylim([-1 1]*mean(abs(cal{2}.offset./cal{1}.offset-1))*1.5) % commented due to nan padding
+          set(gca, 'ygrid', 'on', 'gridlinestyle', ':');
+          hold on, plot(cal{1}.wv, cal{1}.wv*0, 'k')
+          xlim([350 850])
+            
+          xlabel('wavelength [nm]')
+          ylabel('POST/PRE -1 ')
+          title('Non-linearity coefficients (pre & post)')
+	  
+	  
 	  # average coeffcients
 	  coeff_ES =  0.5*(coeff_ES_pre +  coeff_ES_post)
 	  coeff_LI =  0.5*(coeff_LI_pre +  coeff_LI_post)
@@ -207,14 +224,12 @@ for iSN = 1:length(sn)
 	  if sn_rad.(sensor_id) == 'LT'
 	  	fn = [DIR_SLCORR, FN_SLCORR_LT];
 	  endif
-	  keyboard
 	  D = dlmread(fn,'',[50,0,305,256]); % tjor - D is 256 X 256 matrix starting on line 50
 	  D_SL = D / norm(D);
   else
   	 D = D_SL = nan;
  endif
   
-
 
 		
 	###### calibrate data from this instrument
