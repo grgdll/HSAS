@@ -285,20 +285,22 @@ def write_station_summary(summary_path, time, Es_av, Lt_av, Li_av, Rrs_av, exLwn
         writer.writerow([''.join(row)])
         row = str('#wavelengths: S3A_OLCI')
         writer.writerow([''.join(row)])
-        row = str('#time_period: [{"start:"' + str(time[0])[0:19] + ',"end:"' + str(time[-1])[0:19] + '}]')
+        row = str('#time_period: [{"start:"' + str(datetime.date(2022, 7, 13)) + ',"end:"' + str(datetime.date(2022, 7, 21)) + '}]')
+        # row = str('#time_period: [{"start:"' + str(time[0])[0:19] + ',"end:"' + str(time[-1])[0:19] + '}]')
         writer.writerow([''.join(row)])
-        row = str('#reflectance_calculation equation: Aeronet OC lookup table based on Zibordi et al. 2009"')
+        row = str('#reflectance_calculation equation: Aeronet OC lookup table"')
         writer.writerow([''.join(row)])
         row = str('units: {"reflectance":["Wavelength [nm]","Reflectance [sr^-1],"es":["Wavelength [nm]","Irradiance [mW m^-2 nm^-1]"],"lt":["Wavelength [nm]","Radiance [mW m^-2 nm^-1 sr^-1]"],"li":["Wavelength [nm]","Radiance [mW m^2 nm^-1 sr^-1)]", "exLnw":["Wavelength [nm]","Radiance [mW m^2 nm^-1 sr^-1)]"]}')
         writer.writerow([''.join(row)])
     
     # append station average dataframes for each sectrum to csv file -
-    Rrs_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
-    Es_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
-    Lt_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
-    Li_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
-    exLwn_av.to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
-    
+    for i in range(len(Rrs_av)):
+        Rrs_av[i].to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
+        Es_av[i].to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
+        Lt_av[i].to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
+        Li_av[i].to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
+        exLwn_av[i].to_csv(summary_path, na_rep ='NaN', index = False, mode = 'a')
+        
     return
 
 
@@ -373,26 +375,36 @@ if __name__ == '__main__':
     
     # subdirectories to read data
     dir_main = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/'
-    dir_cal = dir_main + 'Processed_TPcorrection/Calibrated/'
-    dir_L0 = dir_main + 'Processed_TPcorrection/L0/'
-    dir_L1 = dir_main + 'Processed_TPcorrection/L1/'
-    dir_L2 = dir_main + 'Processed_TPcorrection/L2/'
+    dir_procrun = 'Nocorrections_FICEcalfiles/' # 'processing run'
+    
+    dir_cal = dir_main + 'Processed_TPcorrection/' + dir_procrun + 'Calibrated/'
+    dir_L0 = dir_main + 'Processed_TPcorrection/' +  dir_procrun + 'L0/'
+    dir_L1 = dir_main + 'Processed_TPcorrection/' +  dir_procrun + 'L1/'
+    dir_L2 = dir_main + 'Processed_TPcorrection/' +  dir_procrun + 'L2/'
     dir_unc = dir_main + 'TO_ADD' 
     dir_srf = dir_main + '/Source/HSAS/HSAS_Processing/FICE_Formatting' # cuntains OLCI SRF and template
     
-    # subdirectory to write data
-    dir_write = dir_main +'Processed_TPcorrection/FICE_format/'
-
-    # load OLCI srf
-    srf, srf_wv, srf_bands = unpack_srf(dir_srf)
-
+    # subdirectories to write data
+    dir_write = dir_main +'Processed_TPcorrection/' + dir_procrun  + 'FICE_submission/'
+    if os.path.exists(dir_write) == False:
+          os.mkdir(dir_write)
+    
     # initialize station sub directories
     stations = sorted(os.listdir(dir_L0))
     station_index = np.arange(0,78,1)
     station_index[70:-1]=np.arange(71,78,1) # raw data from station 70 _134000 is incomplete - cant process
-    for i in range(len(stations)):
-        os.mkdir(dir_write + str(station_index[i]) + '_' + str(stations[i]))
+    #for i in range(len(stations)):
+     #   os.mkdir(dir_write + str(station_index[i]) + '_' + str(stations[i]))
       
+    # load OLCI srf
+    srf, srf_wv, srf_bands = unpack_srf(dir_srf)
+
+    Es_av_summary = []
+    Lt_av_summary = []
+    Li_av_summary = []
+    Rrs_av_summary = []
+    exLwn_av_summary = []
+
     dict_list = []   # list to append summaries
     for i in range(len(stations)): # process each station in sequence
        
@@ -401,6 +413,9 @@ if __name__ == '__main__':
         fn_L0 = glob.glob(dir_L0 + stations[i]  + '/*mat*')        
         fn_L1 = glob.glob(dir_L1 + stations[i]  + '/*mat*') #
         fn_L2 = glob.glob(dir_L2 + stations[i]  + '/*mat*')
+        
+        #  fig_L2 = glob.glob(dir_L2 + stations[i]  + '/plot/*png') # optional scrip - re-name plots
+        # os.rename(fig_L2[0], dir_L2 + stations[i]  + '/' + str(station_index[i]) + '_HSAS_Level2summaryplots.png')
         
         # unpack variables from L1 and L2 data data stuctures in np array format
         # time, windspeed, Es, Lt, Li, Es_int_time, Lt_int_time, Li_int_time, wv = unpack_L1(fn_L1)
@@ -455,18 +470,27 @@ if __name__ == '__main__':
         
 
         # perform averaging/variability for each spectra at each station -outputs dataframe that is appended to station summary in write function
-        Es_av = station_averages_dataframe(Es_OLCI[0],'Es', stations[i], time, windspeed, srf_bands)
-        Lt_av = station_averages_dataframe(Lt_OLCI[0],'Lt', stations[i], time, windspeed, srf_bands)
-        Li_av = station_averages_dataframe(Li_OLCI[0],'Li', stations[i], time, windspeed, srf_bands)
-        Rrs_av = station_averages_dataframe(Rrs_OLCI[0],'reflectance', stations[i], time, windspeed, srf_bands) 
-        exLwn_av = station_averages_dataframe(exLwn_OLCI[0],'nLw', stations[i], time, windspeed, srf_bands)
+        Es_av = station_averages_dataframe(Es_OLCI[0],'Es', station_index[i], time, windspeed, srf_bands)
+        Lt_av = station_averages_dataframe(Lt_OLCI[0],'Lt', station_index[i], time, windspeed, srf_bands)
+        Li_av = station_averages_dataframe(Li_OLCI[0],'Li', station_index[i], time, windspeed, srf_bands)
+        Rrs_av = station_averages_dataframe(Rrs_OLCI[0],'reflectance', station_index[i], time, windspeed, srf_bands) 
+        exLwn_av = station_averages_dataframe(exLwn_OLCI[0],'nLw', station_index[i], time, windspeed, srf_bands)
         
-        summary_path = dir_write + str(station_index[i]) + '_' + str(stations[i]) + '/' + 'Summary_' + str(station_index[i]) + '.csv'
-        write_station_summary(summary_path, time, Es_av, Lt_av, Li_av, Rrs_av, exLwn_av)  
-        dict_list = append_to_summary(dict_list)
+        Es_av_summary.append(Es_av)
+        Lt_av_summary.append(Lt_av)
+        Li_av_summary.append(Li_av)
+        Rrs_av_summary.append(Rrs_av)
+        exLwn_av_summary.append(exLwn_av)
         
+        summary_path = dir_write +  'FRM4SOC_2_FICE_22_AAOT_PML_HSAS_stationsummary.csv'
+        
+        dict_list = append_to_summary(dict_list) # for conditions summary
+        
+        
+    # overall summary - used for station selection    
+    write_station_summary(summary_path, time, Es_av_summary, Lt_av_summary, Li_av_summary, Rrs_av_summary, exLwn_av_summary) 
     
-        #  overall summary - used for station selection    
+    # overall summary - used for station selection    
     ov_summary_path = dir_write +  '/' + 'FICE_conditions_summary.csv'
     df_overall = pd.DataFrame.from_dict(dict_list)  
     df_overall.to_csv(ov_summary_path, na_rep ='NaN', index = False)
