@@ -46,7 +46,6 @@ phi = [90, 135]';
         i_sza = find_rng(sza, s_sza, L2.sza);
 
 
-
     for irec = 1:length(L2.gps.lat)    
         L2.rho(irec) = squeeze(interpn(ws(i_ws), sza(i_sza), squeeze(rho(i_ws,i_sza,1)), L2.(ws_nm)(irec), L2.sza(irec), 'linear'));
     endfor

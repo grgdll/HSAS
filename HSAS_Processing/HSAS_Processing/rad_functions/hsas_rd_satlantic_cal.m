@@ -1,7 +1,5 @@
 function cal = hsas_rd_satlantic_cal(fn, used_pixels)
 
-
-
     fid = fopen(fn, 'r');
     
     tmp = '         ';
@@ -71,6 +69,7 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
 # ES 305.66 'uW/cm^2/nm' 2 BU 1 OPTIC3
 # 997.091	0.00000000E+000	1.000	0.256
 # 
+	
     clear tmp
     tmp = fgets(fid);
     iwv = 1;
@@ -81,10 +80,10 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
 		cal.offset(iwv) = nan;
 		cal.gain(iwv) = nan;
 		cal.int_time_wv(iwv) = nan;
-		%cal.wv(iwv) = [];
-		%cal.offset(iwv) = [];
-		%cal.gain(iwv) = [];
-		%cal.int_time_wv(iwv) = [];
+		% cal.wv(iwv) = [];
+		% cal.offset(iwv) = [];
+		% cal.gain(iwv) = [];
+		% cal.int_time_wv(iwv) = [];
 		tmp2 = strsplit(fgets(fid));
 		if isempty(tmp2{1})== 0	# skips extra line for 464 sensor cal file format
 			fgets(fid);
@@ -123,8 +122,11 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
 	endif
 
    	
-# If there is no used_pixel input, then use all pixels
-    if (nargin == 1)
+  # if
+   	
+   	
+  # If there is no used_pixel input, then use all pixels
+    if (nargin == 1) # 
         used_pixels = 1:length(cal.wv);	
     endif
     
@@ -136,9 +138,6 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
     cal.offset = cal.offset(used_pixels);
     cal.gain = cal.gain(used_pixels);
     cal.int_time_wv = cal.int_time_wv(used_pixels);
-
-
-
 
 
 

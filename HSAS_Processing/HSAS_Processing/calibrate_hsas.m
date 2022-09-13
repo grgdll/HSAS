@@ -1,15 +1,21 @@
 # read hasa digital counts and apply calibration coefficients
-% Modified for FICE 2022 to apply to stations rather than days
 
+
+% Modifications for FICE 2022:
+
+# (i) Applies to stations rather than days
+# (ii) Non-linearity correction now implemented in correct_non_linearity_at_Cal_FICE.m (accomdates new data format from Tartu).
+ 
+ 
 clear all
 close all
- 
+
  
 % pkg load financial
 
 graphics_toolkit("gnuplot");
 
-warning off #Turn off warnings
+warning off #Turn off warnings 
 
 
 addpath(strcat(pwd, "/cruise_specific_functions")) %assumes code is run from ../HSAS_Processing
@@ -47,7 +53,7 @@ for iSN = 1:length(sn)
 
         % fncal = glob([DIR_CAL din_cals{ical} "*" SN{iSN} "*.cal"]);
         fncal = glob([din_cals{ical} "*" sn{iSN} "*.cal"]);
-        
+        fncal_nl = glob([DIN_Non_Linearity NL_files_pre{ical}]); # fncal_nl 
 
 
         if length(fncal)>2 # this is for when there are more cal files for one instrument (e.g., CAL_G SN223)
@@ -58,7 +64,7 @@ for iSN = 1:length(sn)
         
 
         # read and store cal files
-        cal{ical} = hsas_rd_satlantic_cal(fncal);
+        cal{ical} = hsas_rd_satlantic_cal(fncal); # NL: correction 
         offset_(ical,:) = cal{ical}.offset;
         gain_(ical,:) = cal{ical}.gain;
         wv_(ical,:) = cal{ical}.wv;
@@ -159,55 +165,88 @@ for iSN = 1:length(sn)
 	rad_sn = cell2struct(sn,radiometers,2);
         sn_rad = cell2struct(radiometers, sn, 2);
         sensor_id = sn{iSN};	
-	
-  ####### Read non-linearity correction coefficients ##########
+
+# tjor: Mods for FICE:	
+# - FICE deployment has new data format for NL coefficients - see radcal_recipies.txt in HyperSAS_config for more details
+# - We now read a data matrix, from which alpha is calculated within `correct_non_linearity_at_Cal_FICE()'
+# - We also average pre and post deployment data martrices (similar to cal files)
  if FLAG_NON_LINEARITY == 1
 	  pkg load io
 	  #---radiometer related to sn
 	  	  disp('Loading Non-linearity correction coefficients....')  
 	 
 	  # pre deployment
-	  data_range = [1346,1,1525,2]; # Each FICE 2022 Straylight file has different format - data_range finds the SL wavelength and coefficients
-	  coeff_ES_pre = dlmread([DIN_Non_Linearity NL_files_pre{1}],'', data_range);
-	  data_range = [1485,1,1664,2];
-	  coeff_LI_pre = dlmread([DIN_Non_Linearity NL_files_pre{2}],'', data_range);
-	  data_range = [1485,1,1664,2];
-	  coeff_LT_pre = dlmread([DIN_Non_Linearity NL_files_pre{3}],'', data_range);
+        data_range = [1345,0,1525,10]; # d
+	coeff_ES_pre = dlmread([DIN_Non_Linearity NL_files_pre{1}],'', data_range);
+        data_range = [1484,0,1664,10];
+	coeff_LI_pre = dlmread([DIN_Non_Linearity NL_files_pre{2}],'', data_range);
+	data_range = [1484,0,1664,10];
+	coeff_LT_pre = dlmread([DIN_Non_Linearity NL_files_pre{3}],'', data_range);
 	  
 	  # post deployment
-	  data_range = [116,1,295,2]; # 
-	  coeff_ES_post = dlmread([DIN_Non_Linearity NL_files_post{1}],'', data_range);
-	  data_range = [255,1,434,2];
-	  coeff_LI_post = dlmread([DIN_Non_Linearity NL_files_post{2}],'', data_range);
-	  data_range = [255,1,434,2];
-	  coeff_LT_post = dlmread([DIN_Non_Linearity NL_files_post{3}],'', data_range);
+	data_range = [115,0,295,10]; # 
+	coeff_ES_post = dlmread([DIN_Non_Linearity NL_files_post{1}],'', data_range);
+	data_range = [254,0,434,10];
+	coeff_LI_post = dlmread([DIN_Non_Linearity NL_files_post{2}],'', data_range);
+	data_range = [254,0,434,10];
+	coeff_LT_post = dlmread([DIN_Non_Linearity NL_files_post{3}],'', data_range);
+
+	# plot function for 
+        # figure(1, 'visible', 'off');
+        #  clf
+        #  subplot(131)
+        #  plot(coeff_ES_pre(:,1), coeff_ES_pre(:,2))
+        #  hold on
+        #  plot(coeff_ES_post(:,1), coeff_ES_post(:,2),'r--')
+        #  legend ("Pre", "Post");
+        #  % ylim([-1 1]*mean(abs(cal{2}.offset./cal{1}.offset-1))*1.5) % commented due to nan padding
+        #  set(gca, 'ygrid', 'on', 'gridlinestyle', ':');
+        #  xlim([350 850])
+        #  ylim([0,0.001])
+        #  xlabel('wavelength [nm]')
+        #  ylabel('cal coefficient ')
+        #  title('Es: Non-linearity cal coefficients (pre / post')
 	  
-	  
-	  keyboard
-	  figure(1, 'visible', 'off');
-          clf
-          hold on
-          subplot(121)
-          plot(cal{1}.wv, cal{2}.offset./cal{1}.offset-1, [";" datestr(cal{1}.date, "yyyy/mmm/dd") "\n" datestr(cal{2}.date, 	         "yyyy/mmm/dd") ";"])
-          % ylim([-1 1]*mean(abs(cal{2}.offset./cal{1}.offset-1))*1.5) % commented due to nan padding
-          set(gca, 'ygrid', 'on', 'gridlinestyle', ':');
-          hold on, plot(cal{1}.wv, cal{1}.wv*0, 'k')
-          xlim([350 850])
-            
-          xlabel('wavelength [nm]')
-          ylabel('POST/PRE -1 ')
-          title('Non-linearity coefficients (pre & post)')
-	  
-	  
-	  # average coeffcients
-	  coeff_ES =  0.5*(coeff_ES_pre +  coeff_ES_post)
-	  coeff_LI =  0.5*(coeff_LI_pre +  coeff_LI_post)
-	  coeff_LT =  0.5*(coeff_LT_pre +  coeff_LT_post)
-	  
-	 # coeff_LI(:,1) is wavelength bin, coeff_LI(:,1:2) is coefficient value
-	  non_linearity_coeff = struct('coeff_LI',coeff_LI(:,1:2),'coeff_LT',coeff_LT(:,1:2),'coeff_ES',coeff_ES(:,1:2));
+	#  subplot(132)
+        #  plot(coeff_LI_pre(:,1), coeff_LI_pre(:,2))
+        #  hold on
+        #  plot(coeff_LI_post(:,1), coeff_LI_post(:,2),'r--')
+        #  legend ("Pre", "Post");
+        #  % ylim([-1 1]*mean(abs(cal{2}.offset./cal{1}.offset-1))*1.5) % commented due to nan padding
+        #  set(gca, 'ygrid', 'on', 'gridlinestyle', ':');
+        #  xlim([350 850])
+        #  ylim([0,0.001])
+        #  xlabel('wavelength [nm]')
+        #  ylabel('cal coefficient ')
+        #  title('Li: Non-linearity cal coefficients (pre / post')
+	
+	#  subplot(133)
+        #  plot(coeff_LT_pre(:,1), coeff_LT_pre(:,2))
+        #  hold on
+        #  plot(coeff_LT_post(:,1), coeff_LT_post(:,2),'r--')
+        #  legend ("Pre", "Post");
+        #  % ylim([-1 1]*mean(abs(cal{2}.offset./cal{1}.offset-1))*1.5) % commented due to nan padding
+        #  set(gca, 'ygrid', 'on', 'gridlinestyle', ':');
+        #  xlim([350 850])
+        #  ylim([0,0.001])
+        #  xlabel('wavelength [nm]')
+        #  ylabel('cal coefficient ')
+        #  title('Li: Non-linearity cal coefficients (pre / post)')
+  
+	 
+	#  set(gcf)
+	#  fnout = [DIR_CAL "/NLcoeff_pre_post.png"]   ;
+	#  print("-dpng", fnout);
+	 
+	 
+	# average coeffcients
+           coeff_ES =  0.5*(coeff_ES_pre +  coeff_ES_post);
+           coeff_LI =  0.5*(coeff_LI_pre +  coeff_LI_post);
+	   coeff_LT =  0.5*(coeff_LT_pre +  coeff_LT_post);
+	 
+	   non_linearity_coeff = struct('coeff_LI',coeff_LI,'coeff_LT',coeff_LT,'coeff_ES',coeff_ES);
   else
-  	 #non_linearity_coeff = struct('coeff_LI',nan,'coeff_LT',nan,'coeff_ES',nan);
+  	   non_linearity_coeff = struct('coeff_LI',nan,'coeff_LT',nan,'coeff_ES',nan);
   endif
     
 		

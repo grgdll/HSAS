@@ -7,8 +7,9 @@ VERBOSE = false;
 L1.hdr.max_tilt_accepted = max_tilt_accepted;
 L1.wv = L0.wv;
 wv_ref = 21; % wavelength bin where data should always exist
+
 if strcmp(in_type,'AW')
-   iOK = find(L0.tilt <= max_tilt_accepted & L0.instr.Li.data(:,wv_ref)>0 & L0.instr.Lt.data(:,wv_ref)>0 & L0.instr.Es.data(:,wv_ref)>0);
+   iOK = find(L0.tilt <= max_tilt_accepted &  L0.instr.Li.data(:,wv_ref)>0 & L0.instr.Lt.data(:,wv_ref)>0 & L0.instr.Es.data(:,wv_ref)>0);
 else
    iOK = find(L0.tilt <= max_tilt_accepted & L0.instr.Lu.data(:,wv_ref)>0);
 endif

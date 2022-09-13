@@ -23,9 +23,7 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 input_parameters_hsas;
 
 fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data 
-# fnin = {"20220714_124000"}; % tj - TEMPORARY HARD CODING - 1st day/station of FICE2022
-# fnin = {"20220713_133100"}; 
-# fnin = {"20191019"};
+#fnin = {"20220714_102000"};
 # fnin ={"hsas",...
 #   "/data/lazarev1/backup/cruise_data/AMT24/DallOlmo/HSAS/Satcon_extracted/Physical_units/",...
 #   "v1",...
@@ -56,7 +54,6 @@ if isempty(filename)
     disp('WARNING: No input file exiting.')
     exit
 endif
-
 
 
 # for use in sub-functions
@@ -163,8 +160,6 @@ L1_f.files.input_argv = {INSTRUMENT, DIN_L1, FILTERING};
 
 
 
-
-
 ### Create L2 structure ###
 L2 = L1_f;
 
@@ -178,7 +173,8 @@ if strcmp(FILTERING,'lowest');
       L2       = hsas_filter_sensors_using_Lt_data(L2, L2, 25, 'vaa_ths');
    endif
    FILT_TAG = '_Low';
-   
+
+ 
 elseif strcmp(FILTERING,'continuous');
    # this is the version for continuous data; temporal filtering
    if strcmp(INSTRUMENT,'triosIW')
@@ -349,7 +345,6 @@ else
 endif
 	
 
-
 # ### Calculate Lw = Lt - rho*Li
 # if strcmp(fnin{1},'triosIW');
 #    disp("Calculating Lw")
@@ -461,7 +456,6 @@ endif
    else % 2 columns implies open ocean rho method has been used
       L2.Lw.data = L2.instr.Lt.data - L2.rho_fitted(:,1).*L2.instr.Li.data - L2.rho_fitted(:,2);
    endif
-   
 #endif ??
 
 ### Apply filter for negative data ###

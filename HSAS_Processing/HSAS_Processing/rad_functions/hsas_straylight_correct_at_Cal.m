@@ -3,7 +3,7 @@ input_parameters_hsas;
 
 VBS = false;
 
-D = D(14:151,14:151); % hard coding step - 14 and 150 are the first and last wavelength bins of wl vector. bin 151 is for padding
+D = D(14:151,14:151); % hard coding step - 14 and 150 are the first and last wavelength bins of wl vector. bin 151 is for padding. This trunction step should be revisited when looking at class-based files.
 
 
 I = eye(length(D),length(D)); % 

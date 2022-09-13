@@ -12,8 +12,19 @@ function [out] = correct_non_linearity_at_Cal(rad_sn,sn_rad,sn,coeff,in,wv)
     coeff0=coeff.coeff_ES;
   endif
 
-  alf = interp1(coeff0(:,1), coeff0(:,2), wv)';
+  alf = interp1(coeff0(:,1), coeff0(:,2), wv,'extrap')'; # 
+
+
+  # figure()
+  # plot(wv,alf)
+
   err = 1-alf.*data;
   data_corrected = data.*err;
+  
   out = data_corrected;
+  
+  # figure()
+  # plot(wv,(out-in)./(out+in))
+  
+  
 endfunction

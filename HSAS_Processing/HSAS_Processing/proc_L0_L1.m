@@ -38,12 +38,8 @@ input_parameters_hsas;
 
 
 # Get arguments passed to function: INSTRUMENT switch is first argument xargs comes after
- fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
-# fnin = {"20220720_080000"};
-# fnin = {"20220714_132000"};
-# fnin = {"20220714_132000"}; % tj - TEMPORARY HARD CODING -Example day/station of FICE2022
-# fnin = {"20220713_133100"}; 
-% fnin = {"20150916"};
+fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
+#fnin = {"20220714_102000"};
 % fnin = {"hsas", ...
 %   		"20191017", ...
 %   	  	"v1"			};#, ...
@@ -173,7 +169,7 @@ if strcmp(INSTRUMENT, 'hsas')
 	iinstr = 1;	# this is a counter for instrument with similar names (e.g., two LT radiometers)
 	 
   
-	for irad = 1:length(radiometers)
+	for irad = 1:3
 			
        # intialize structure		
 		clear rad	
@@ -189,17 +185,16 @@ if strcmp(INSTRUMENT, 'hsas')
 		 ####################################################
 	
 		rad.raw = hsas_rd_many(sn_rad, fn, VBS); 
+    	
 
-    
  	   # correct for dark counts
  	   	rad.raw_nodk = correct_dk(sn_rad, rad.raw, VBS); 
-                   
-     # non-linearity correction
-      #rad = correct_non_linearity(rad_sn, rad.raw.sn,non_linearity_coeff,rad);
+                   	
+           # non-linearity correction
+           # rad = correct_non_linearity(rad_sn, rad.raw.sn,non_linearity_coeff,rad);  # Done in callibration step?
 
  	   # interpolate using wv as a new wavelength set
  	   	rad.raw_intwv = intwv(sn_rad, rad.raw_nodk, wv, VBS);
-		
 
  	   # check if the previous type of instrument has already been processed (requires that similar instrument are listed one after the other in input_parameters.m)
  	   if irad>1 & strcmp(radiometers{irad}, radiometers{irad-1})
@@ -343,13 +338,14 @@ if strcmp(INSTRUMENT,'hsas')
 	
    # ABOVE WATER RADIOMETER MEASURES LT,LI,ES
    # Es
+
    L0.instr.Es = hsas_int2Lt(ES.raw_intwv, LT.raw_intwv.time);
    L0.instr.Es.roll = interp1(ths.time, ths.roll, L0.time, TIME_INT_METHOD);
    L0.instr.Es.pitch = interp1(ths.time, ths.pitch, L0.time, TIME_INT_METHOD);
    L0.instr.Es.tilt = interp1(ths.time, ths.tilt, L0.time, TIME_INT_METHOD);
    L0.instr.Es.temp_pcb = interp1(ES.raw.time, ES.raw.TEMP_degC, LT.raw_intwv.time);
    L0.instr.Es.int_time_sec = interp1(ES.raw.time, ES.raw.int_time_sec, LT.raw_intwv.time);
-  
+    
    % try
    %    L0.instr.Es.vaa_ths = interp1(ths.time, ths.compass, L0.time, TIME_INT_METHOD);
    % catch
@@ -422,7 +418,6 @@ endif
 
 
 
-
 #----------------------------------
 # Header
 
@@ -456,7 +451,8 @@ if strcmp(INSTRUMENT,'triosIW')
    L1 = hsas_mk_L1_filtered(L0, MAX_TILT_ACCEPTED_L1,"IW");
 else
    L1 = hsas_mk_L1_filtered(L0, MAX_TILT_ACCEPTED_L1,"AW"); 
-endif
+end
+
 
 ##### remove old lat lon fields
 #    L1 = rmfield(L1, {"lat","lon"});

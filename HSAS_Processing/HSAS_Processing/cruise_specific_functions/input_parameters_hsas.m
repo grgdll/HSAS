@@ -64,14 +64,14 @@ GLOB_WIND = "/*meteo.xlsx";# glob pattern for wind data to concatenate after DAT
 
 
 DIR_TEMPCORR = [MAIN_DIR "HyperSAS_config/Temperature/"];
-FN_TEMPCORR_ES = "PML_8-010-20-thermal-0258.csv";# File name of temperature correction factors and their uncertainties for ES
+FN_TEMPCORR_ES = "PML_8-010-20-thermal-0258.csv";# File name of temperature correction factors and their uncertainties
 FN_TEMPCORR_LT = "PML_8-010-20-thermal-0223.csv";
 FN_TEMPCORR_LI = "PML_8-010-20-thermal-0222.csv";
 
 DIR_SLCORR = [MAIN_DIR "HyperSAS_config/Straylight/"];
-FN_SLCORR_ES = "cp_straylight_SAT2027.txt";# File name of Straylight correction factors for ES
-FN_SLCORR_LT = "cp_straylight_SAT464.txt"
-FN_SLCORR_LI = "cp_straylight_SAT2054.txt"
+#FN_SLCORR_ES = "cp_straylight_SAT2027.txt";# File name sof Straylight correction factors
+#FN_SLCORR_LT = "cp_straylight_SAT0464.txt"
+#FN_SLCORR_LI = "cp_straylight_SAT2054.txt"
 
 
 DIN_HSAS = [MAIN_DIR "Raw/RawExtracted/"];
@@ -81,15 +81,17 @@ DOUT_HSAS = [MAIN_DIR DOUT_HSAS_SUB];
 DIR_CAL = [MAIN_DIR "HyperSAS_config/"];
 DIN_CALS_PRE = [DIR_CAL "Pre/"];
 DIN_CALS_POST = [DIR_CAL "Post/"];
+
 DIN_StrayLight = [MAIN_DIR "HyperSAS_config/Straylight/"];
 DIN_Non_Linearity = [MAIN_DIR "HyperSAS_config/Non-linearity/"]; 
 
 NL_files_pre = {"Pre/cp_radcal_SAT2027.txt", "Pre/cp_radcal_SAT2054.txt", "Pre/cp_radcal_SAT0464.txt"};
 NL_files_post = {"Post/cp_radcal_SAT2027.txt", "Post/cp_radcal_SAT2054.txt", "Post/cp_radcal_SAT0464.txt"};
-#-Flags to check if do non-linearity, temperature, Straylight corrections
+
+# -Flags to check if do non-linearity, temperature, Straylight corrections
 FLAG_NON_LINEARITY = 1; % 0: do not apply correction, 1: apply correction
 FLAG_TEMPERATURE = 0;
-FLAG_STRAY_LIGHT = 1;
+FLAG_STRAY_LIGHT = 0;
 
 #-ACS data Path
 FN_ACS = [MAIN_DIR, "AC-9/ACStoHSAS_sentine.txt"];

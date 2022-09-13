@@ -19,12 +19,10 @@ function cal = hsas_calibrate_with_correction(sensor_id, wl, L_CountsLightDat, L
 
 data = (L_CountsLightDat - L_CalDarkDat);
 
-
-#---- nonlinear correction
+#---- nonlinear correction - #
 if FLAG_NON_LINEARITY == 1
-	data = correct_non_linearity_at_Cal(rad_sn, sn_rad, sensor_id, non_linearity_coeff,data,wl);
+	data = correct_non_linearity_at_Cal_FICE(rad_sn, sn_rad, sensor_id, non_linearity_coeff,data,wl);
 endif
-
 
 
 
@@ -34,8 +32,10 @@ if FLAG_STRAY_LIGHT == 1
 endif
 
 
+
 #--- Calibration	
 cal = data.*a.*ic.*it_1./it_2;
-		
+
+	
 	
 endfunction
