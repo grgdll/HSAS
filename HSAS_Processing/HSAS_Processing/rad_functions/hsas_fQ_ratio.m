@@ -1,5 +1,6 @@
 function [fQs0_fQs, fQ0_fQs0, fQs0, fQs, fQ0, wv] = hsas_fQ_ratio(wv0, sza0, chl0, vza0, phi0, foQ, PLOT, TEST);
-
+# function modifed by tjor for FICE to apply linear extrapolation for fQ terms outside wavelength range.
+# This enables 412 and 665 nm bands to be evaluated in Rrs analysis
 
 VBS = false;
 
@@ -100,11 +101,17 @@ iwv = find(wv0>=wv(1) & wv0<=wv(end));
 #max(wv0(iwv)), max(sza(i_sza)),           max(vza), max(phi(i_phi)), max(log10(chl))   ]
 
 #keyboard
-         fQs(irec, :) = squeeze(interpn(wv, sza(i_sza), vza, phi(i_phi), log10(chl), foQ(:,i_sza,:,i_phi,:), wv0, sza0(irec), vza_water0(irec), phi0(irec), log10(chl0)(irec), method, extrapval = nan));
-        fQs0(irec, :) = squeeze(interpn(wv, sza(i_sza), vza, phi(i_phi), log10(chl), foQ(:,i_sza,:,i_phi,:), wv0, sza0(irec), 1.08,             phi0(irec), log10(chl0)(irec), method, extrapval = nan));
-         fQ0(irec, :) = squeeze(interpn(wv, vza, phi(i_phi), log10(chl), squeeze(foQ(:,1,:,i_phi,:)),        wv0,             1.08,             phi0(irec), log10(chl0)(irec), method, extrapval = nan));
-
+         fQs(irec, :) = squeeze(interpn(wv, sza(i_sza), vza, phi(i_phi), log10(chl), foQ(:,i_sza,:,i_phi,:), wv0, sza0(irec), vza_water0(irec), phi0(irec), log10(chl0)(irec), method));
+         fQs(irec, :) = interp1(wv0(~isnan(fQs(irec, :))==1), fQs(irec, :)(~isnan(fQs(irec, :))==1), wv0,'extrap'); # apply linear extrapolation outside data range
+         
+        fQs0(irec, :) = squeeze(interpn(wv, sza(i_sza), vza, phi(i_phi), log10(chl), foQ(:,i_sza,:,i_phi,:), wv0, sza0(irec), 1.08,             phi0(irec), log10(chl0)(irec), method)); 
+         fQs0(irec, :) = interp1(wv0(~isnan(fQs0(irec, :))==1), fQs0(irec, :)(~isnan(fQs0(irec, :))==1), wv0,'extrap'); # apply linear extrapolation outside data range
+         
+         fQ0(irec, :) = squeeze(interpn(wv, vza, phi(i_phi), log10(chl), squeeze(foQ(:,1,:,i_phi,:)),        wv0,             1.08,             phi0(irec), log10(chl0)(irec), method));
+         fQ0(irec, :) = interp1(wv0(~isnan(fQ0(irec, :))==1), fQ0(irec, :)(~isnan(fQ0(irec, :))==1), wv0,'extrap'); # # apply linear extrapolation outside data range
+ 	  
     endfor
+
 
 # compute ratios
     fQs0_fQs = fQs0./fQs;

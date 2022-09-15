@@ -23,7 +23,8 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 input_parameters_hsas;
 
 fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data 
-#fnin = {"20220714_102000"};
+# fnin = {"20220714_102000"};
+# fnin = {"20220714_102000"};
 # fnin ={"hsas",...
 #   "/data/lazarev1/backup/cruise_data/AMT24/DallOlmo/HSAS/Satcon_extracted/Physical_units/",...
 #   "v1",...
@@ -336,12 +337,14 @@ endif
 
 ### Calculate rho so that Lw in the NIR is zero and flat ###
 
-
+#keyboard
 if strcmp(INSTRUMENT,'triosIW');
    disp("No rho correction");
 else
- %  L2 = hsas_cmp_rho_2pars(L2); % open ocean rho method
-    L2 = hsas_extract_rho_AeronetOC(L2, 'appwind_spd'); % AAOT (tower) - apparent windspeed can be used
+% L2 = hsas_cmp_rho_2pars(L2); % open ocean rho method
+% L2 = hsas_extract_rho_AeronetOC(L2, 'appwind_spd'); % AAOT (tower) - apparent windspeed can be used
+L2 = hsas_extract_rho_Mobley99(L2, 'appwind_spd');
+   
 endif
 	
 
