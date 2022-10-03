@@ -69,9 +69,9 @@ FN_TEMPCORR_LT = "PML_8-010-20-thermal-0223.csv";
 FN_TEMPCORR_LI = "PML_8-010-20-thermal-0222.csv";
 
 DIR_SLCORR = [MAIN_DIR "HyperSAS_config/Straylight/"];
-#FN_SLCORR_ES = "cp_straylight_SAT2027.txt";# File name sof Straylight correction factors
-#FN_SLCORR_LT = "cp_straylight_SAT0464.txt"
-#FN_SLCORR_LI = "cp_straylight_SAT2054.txt"
+FN_SLCORR_ES = "cp_straylight_SAT2027.txt";# File names of Straylight correction factors
+FN_SLCORR_LT = "cp_straylight_SAT0464.txt";
+FN_SLCORR_LI = "cp_straylight_SAT2054.txt";
 
 
 DIN_HSAS = [MAIN_DIR "Raw/RawExtracted/"];
@@ -89,9 +89,9 @@ NL_files_pre = {"Pre/cp_radcal_SAT2027.txt", "Pre/cp_radcal_SAT2054.txt", "Pre/c
 NL_files_post = {"Post/cp_radcal_SAT2027.txt", "Post/cp_radcal_SAT2054.txt", "Post/cp_radcal_SAT0464.txt"};
 
 # -Flags to check if do non-linearity, temperature, Straylight corrections
-FLAG_NON_LINEARITY = 1; % 0: do not apply correction, 1: apply correction
+FLAG_NON_LINEARITY = 0; % 0: do not apply correction, 1: apply correction
 FLAG_TEMPERATURE = 0;
-FLAG_STRAY_LIGHT = 0;
+FLAG_STRAY_LIGHT = 1;
 
 #-ACS data Path
 FN_ACS = [MAIN_DIR, "AC-9/ACStoHSAS_sentine.txt"];
@@ -105,8 +105,8 @@ FNC_RD_SURF = @rd_oceanlogger_FICE; # function to read other met and surface dat
 
 ##########################################
 ## Parameters for L2 processing
-#
 # type of filtering applied to data
+##########################################
 %FILTERING  = 'continuous'; # 	L1_f = hsas_filter_sensors_using_Lt_data_v2(L1_f, L1_f, 'vaa_ths'); 
  FILTERING  = 'lowest'; # 		L1_f = hsas_filter_sensors_using_Lt_data(L1_f, L1_f, 25, 'vaa_ths')
  %FILTERING  = 'both'; # 		L1_f = hsas_filter_sensors_using_Lt_data_v2(L1_f, L1_f, 'vaa_ths');

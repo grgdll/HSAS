@@ -106,7 +106,7 @@ for iSN = 1:length(sn)
         print("-dpng", fnout);
 	endif 
     
-       
+      
     ## compute and write average cal file (+ uncertainty) for this instrument SN
         # compute stats of cal coeffs
 		if length(cal)==2
@@ -148,8 +148,7 @@ for iSN = 1:length(sn)
             wv = wv_;
 	
 		endif	
-			
-			
+				
 			
 	# save existing calibrations in octave binary format
        	if ~exist([DIR_CAL CRUISE])    
@@ -240,9 +239,9 @@ for iSN = 1:length(sn)
 	 
 	 
 	# average coeffcients
-           coeff_ES =  0.5*(coeff_ES_pre +  coeff_ES_post);
-           coeff_LI =  0.5*(coeff_LI_pre +  coeff_LI_post);
-	   coeff_LT =  0.5*(coeff_LT_pre +  coeff_LT_post);
+           coeff_ES =  0.5*(coeff_ES_pre + coeff_ES_post);
+           coeff_LI =  0.5*(coeff_LI_pre + coeff_LI_post);
+	   coeff_LT =  0.5*(coeff_LT_pre + coeff_LT_post);
 	 
 	   non_linearity_coeff = struct('coeff_LI',coeff_LI,'coeff_LT',coeff_LT,'coeff_ES',coeff_ES);
   else
@@ -263,10 +262,24 @@ for iSN = 1:length(sn)
 	  if sn_rad.(sensor_id) == 'LT'
 	  	fn = [DIR_SLCORR, FN_SLCORR_LT];
 	  endif
-	  D = dlmread(fn,'',[50,0,305,256]); % tjor - D is 256 X 256 matrix starting on line 50
-	  D_SL = D / norm(D);
+	  
+	  # tjor - for 2022 SL files, Tartu now provide the linear spread function matrix (LSF)
+	  # This need to be correctly normalized to give thine straylight distribution matrix. eg. see, 
+	  #  https://iopscience.iop.org/article/10.1088/0952-4746/34/4/915
+	  
+	  # read linear spread function
+	  LSF = dlmread(fn,'',[50,1,305,255]); # LSF (linear spread function) is 255 X 255 matrix, which matches wl bins in 		  rad_cal files 
+	  # (padding rows are deliberately not read)
+	  LSF = LSF(14:150,14:150); # hard-coding step. Reduces matrix to 137 * 137 (matching wl bin indices in rad_cal 		  files) - bin 14 is the first wl bin used in processing
+	  	 
+	  # convert to straylight
+	  D_SL = LSF./sum(LSF'); # out of band normalization  - normalize w.r.t. sum over each row of LSF matrix (energy)
+	  for i=1:length(D_SL)    
+	  	D_SL(i,i) = 0;  # in-band normalization - set to zero
+	  endfor
+	
   else
-  	 D = D_SL = nan;
+  	  D = D_SL = nan;
  endif
   
 
@@ -293,18 +306,24 @@ for iSN = 1:length(sn)
         	fn = glob([DIN_HSAS sday "/*" sn{iSN} "*.dat"]);
 
 	        for ifn = 1:length(fn)
-            
+        
 				disp(sprintf("%u/%u", ifn, length(fn)));
 				fflush(stdout);
 
 		        # read digital counts
+		
 	            	out = hsas_rd_digital_counts(fn{ifn});
 				    if isempty(out.time)
 						continue;
 				    endif            
 			
-	            ### apply cal
-	 
+	      
+	  # tjor - extra filter step for FICE. This si done sow tha `out' corresponds to same wl bins as offset. Ideally, in future, processing, this should be done via modifying hsas_rd_digital counts - 
+	           if length(out.wv) > length(cal{1}.wv)
+	           	out.(out.instru) = out.(out.instru)(:,cal{1}.usedpixels)
+	           	out.wv = cal{1}.wv
+	           endif
+	  
 	                ff = [out.instru "cal"];
 	                out.cal_file = fnout_cal;
                     out.(ff) = hsas_calibrate_with_correction(sn{iSN}, out.wv, L_CountsLightDat=out.(out.instru), L_CalDarkDat=offset.mean, gain.mean,immers_coeff=1, it_1=int_time, it_2=out.int_time_sec, rad_sn, sn_rad, non_linearity_coeff,D_SL,FLAG_NON_LINEARITY,FLAG_STRAY_LIGHT);

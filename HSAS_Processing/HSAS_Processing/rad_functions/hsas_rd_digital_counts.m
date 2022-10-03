@@ -1,4 +1,4 @@
-function out = hsas_rd_digital_counts(fn, used_pixels)
+function out = hsas_rd_digital_counts(fn)
 # 
 # out = rd_hsas(fn)
 #

@@ -6,7 +6,7 @@ function d = rd_anemometer_FICE(fn)
 
     [data, headers] = xlsread(fn);
 
-    d.time = data(:,1) + 693960; - 1/24; % [decimal days] 693960 converts between excel and octave time, -1/24 accounts for UTC +1 to UTC 
+    d.time = data(:,1) + 693960 - 1/24; % [decimal days] 693960 converts between excel and octave time, -1/24 accounts  for UTC +1 to UTC 
    % d.time = data(:,1) + 693960; % this assumes xls times are already in UTC.
 
     d.wspd = data(:,4); # [m/s] - median in previous 10 mins

@@ -106,40 +106,36 @@ function cal = hsas_rd_satlantic_cal(fn, used_pixels)
 #         keyboard
 #         endif
         
-        iwv = iwv+1;
+        iwv = iwv + 1;
         
         
     endwhile
     
+   % required from some Tartu cal formats (2027, 2054)
+   # if ~strcmp(cal.sn,'0464') 
+   inan = find(isnan(cal.wv)); 
+   inotnan = find(~isnan(cal.wv)); 
    
-   	% required from some Tartu cal formats (2027, 2054)
-   	if ~strcmp(cal.sn,'0464') 
-		inan = find(isnan(cal.wv)); 
-		cal.wv(inan) = [];
-		cal.offset(inan) = [];
-		cal.gain(inan) = [];
-		cal.int_time_wv(inan) = [];
-	endif
+   cal.wv(inan) = [];
+   cal.offset(inan) = [];
+   cal.gain(inan) = [];
+   cal.int_time_wv(inan) = [];
+   cal.usedpixels = inotnan;
+   # endif
 
-   	
-  # if
-   	
-   	
-  # If there is no used_pixel input, then use all pixels
-    if (nargin == 1) # 
-        used_pixels = 1:length(cal.wv);	
-    endif
-    
-    
-    fclose(fid);
+   # tjor - already taken into account via inan deletion step?
+   # If there is no used_pixel input, then use all pixels
+   #if (nargin == 1) 
+    #   used_pixels = 1:length(cal.wv);	
+   #endif
 
-
-    cal.wv = cal.wv(used_pixels);
-    cal.offset = cal.offset(used_pixels);
-    cal.gain = cal.gain(used_pixels);
-    cal.int_time_wv = cal.int_time_wv(used_pixels);
-
-
+   #cal.wv = cal.wv(used_pixels);
+   #cal.offset = cal.offset(used_pixels);
+   #cal.gain = cal.gain(used_pixels);
+   #cal.int_time_wv = cal.int_time_wv(used_pixels);
+   
+   
+   fclose(fid);
 
 endfunction
 

@@ -17,17 +17,18 @@ function [out] = correct_non_linearity_at_Cal_FICE(rad_sn,sn_rad,sn,coeff,in,wv)
 
 
   # extract data from NL coeff matrix - refer to radcal_recipies.txt 
-  wv_nl = coeff0(2:end,2); # nl subscript indicates wv vector is different length from nl  file
+  wv_nl = coeff0(2:end,2); # nl subscript indicates wv vector is different length from nl matrix
   S1 = coeff0(2:end,7);
   S2 = coeff0(2:end,9);
   t1 = coeff0(1,7);
   t2 = coeff0(1,9);
   
+  # compute alpha
   K = t1/(t2 + t1);
   S12 = (1 + K)*S1 - K*S2;
   alpha_nl = (S1 - S12)./S12.^2; 
 
-  # previous steps duplicated from correct_non_linearity_at_Cal_FICE 
+  # previous steps duplicated from correct_non_linearity_at_Cal
   alpha = interp1(wv_nl, alpha_nl, wv,'extrap')'; # adjusts to length of cal file
   err = 1 - alpha.*data;
   data_corrected = data.*err;
