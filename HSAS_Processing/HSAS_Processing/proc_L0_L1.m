@@ -39,6 +39,7 @@ input_parameters_hsas;
 
 # Get arguments passed to function: INSTRUMENT switch is first argument xargs comes after
 fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED  for passing all data
+# fnin = {'20220713_133100'};
 # fnin = {"20220714_102000"};
 # fnin = {"hsas", ...
 %   		"20191017", ...

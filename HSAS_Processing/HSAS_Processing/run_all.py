@@ -11,7 +11,7 @@ sub_dir = [name for name in os.listdir(dir)]
 print('All sub_DIR: ', sub_dir)
 
 
-# os.system('octave calibrate_hsas.m')
+#os.system('octave calibrate_hsas.m')
 for fd in sub_dir:
     print('# Starting for ',fd,'!')
     os.system('octave proc_L0_L1.m '+ fd)

@@ -22,7 +22,9 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 # read input parameters for this cruise
 input_parameters_hsas;
 
-fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data 
+ fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data 
+#fnin = {'20220713_133100'};
+# fnin = {"20220714_102000"};
 # fnin = {"20220714_102000"};
 # fnin = {"20220714_102000"};
 # fnin ={"hsas",...

@@ -1,10 +1,12 @@
 # read hasa digital counts and apply calibration coefficients
 
 
-% Modifications for FICE 2022:
+% Modifications for FICE 2022 by tjor:
 
-# (i) Applies to stations rather than days
-# (ii) Non-linearity correction now implemented in correct_non_linearity_at_Cal_FICE.m (accomdates new data format from Tartu).
+# (i)  Calibration applies to stations rather than days.
+# (ii) Non-linearity correction now implemented in correct_non_linearity_at_Cal_FICE.m (accomodates new data format from Tartu).
+# (iii) Straylight correction has been modified to take Linear Spread Function matrix (L), from which straylight matrix D_SL in derived
+(# previous input was via D_SL directly)
  
  
 clear all
@@ -165,17 +167,17 @@ for iSN = 1:length(sn)
         sn_rad = cell2struct(radiometers, sn, 2);
         sensor_id = sn{iSN};	
 
-# tjor: Mods for FICE:	
-# - FICE deployment has new data format for NL coefficients - see radcal_recipies.txt in HyperSAS_config for more details
-# - We now read a data matrix, from which alpha is calculated within `correct_non_linearity_at_Cal_FICE()'
-# - We also average pre and post deployment data martrices (similar to cal files)
+# tjor: modifications for FICE non-linearity follow from this point :	
+# - FICE deployment has new data format for NL coefficients - see `radcal_recipies.txt' in HyperSAS_config for more details
+# - We now read a general data matrix, from which alpha is calculated within `correct_non_linearity_at_Cal_FICE()'
+# - We also average pre and post deployment data martrices (similar approach to cal files), before deriving alpha.
  if FLAG_NON_LINEARITY == 1
 	  pkg load io
 	  #---radiometer related to sn
 	  	  disp('Loading Non-linearity correction coefficients....')  
 	 
 	  # pre deployment
-        data_range = [1345,0,1525,10]; # d
+        data_range = [1345,0,1525,10]; # reads new data matrix for each sensor callibration
 	coeff_ES_pre = dlmread([DIN_Non_Linearity NL_files_pre{1}],'', data_range);
         data_range = [1484,0,1664,10];
 	coeff_LI_pre = dlmread([DIN_Non_Linearity NL_files_pre{2}],'', data_range);
@@ -183,7 +185,7 @@ for iSN = 1:length(sn)
 	coeff_LT_pre = dlmread([DIN_Non_Linearity NL_files_pre{3}],'', data_range);
 	  
 	  # post deployment
-	data_range = [115,0,295,10]; # 
+	data_range = [115,0,295,10]; # reads new data matrix for each sensor callibration
 	coeff_ES_post = dlmread([DIN_Non_Linearity NL_files_post{1}],'', data_range);
 	data_range = [254,0,434,10];
 	coeff_LI_post = dlmread([DIN_Non_Linearity NL_files_post{2}],'', data_range);
@@ -238,7 +240,7 @@ for iSN = 1:length(sn)
 	#  print("-dpng", fnout);
 	 
 	 
-	# average coeffcients
+	# average of pre/post data matrices for each sensor callibration
            coeff_ES =  0.5*(coeff_ES_pre + coeff_ES_post);
            coeff_LI =  0.5*(coeff_LI_pre + coeff_LI_post);
 	   coeff_LT =  0.5*(coeff_LT_pre + coeff_LT_post);
@@ -250,6 +252,9 @@ for iSN = 1:length(sn)
     
 		
   #----Read Straylight Distribution Matrix
+  # tjor - for 2022 SL files, Tartu now provide the linear spread function matrix (LSF)
+  # This is now normalized to give the straylight distribution matrix, D_SL. eg. see,  
+  #  https://iopscience.iop.org/article/10.1088/0952-4746/34/4/915
    if FLAG_STRAY_LIGHT == 1
 	  disp('Loading StrayLight Distribution Matrix....')  
 
@@ -263,21 +268,17 @@ for iSN = 1:length(sn)
 	  	fn = [DIR_SLCORR, FN_SLCORR_LT];
 	  endif
 	  
-	  # tjor - for 2022 SL files, Tartu now provide the linear spread function matrix (LSF)
-	  # This need to be correctly normalized to give thine straylight distribution matrix. eg. see, 
-	  #  https://iopscience.iop.org/article/10.1088/0952-4746/34/4/915
-	  
-	  # read linear spread function
-	  LSF = dlmread(fn,'',[50,1,305,255]); # LSF (linear spread function) is 255 X 255 matrix, which matches wl bins in 		  rad_cal files 
-	  # (padding rows are deliberately not read)
-	  LSF = LSF(14:150,14:150); # hard-coding step. Reduces matrix to 137 * 137 (matching wl bin indices in rad_cal 		  files) - bin 14 is the first wl bin used in processing
-	  	 
-	  # convert to straylight
-	  D_SL = LSF./sum(LSF'); # out of band normalization  - normalize w.r.t. sum over each row of LSF matrix (energy)
-	  for i=1:length(D_SL)    
-	  	D_SL(i,i) = 0;  # in-band normalization - set to zero
-	  endfor
+	  LSF = dlmread(fn,'',[49,0,304,255]); # read LSF (linear spread function) is 256 X 256 matrix, which matches wl bins 
+	  # in rad_cal files 	 
+	 
+	  # convert to straylight matrix D_SL
+	  D = LSF./(sum(LSF')); # out-of-band normalization  - normalize w.r.t. sum over each row of LSF matrix (energy of each scan)
+	  for i=1:length(D)    
+	  	D(i,i) = 0;     # in-band normalization - set diagonal elements to zero
+	  endfor 
 	
+	  D_SL = D(cal{1}.usedpixels,cal{1}.usedpixels); # Reduces matrix to 137 * 137 (matching wl bin indices in rad_cal 		  		  files) - bin 14 is normally the first wl bin used in processing, 150 is the last #
+	  
   else
   	  D = D_SL = nan;
  endif
@@ -285,7 +286,6 @@ for iSN = 1:length(sn)
 
 		
 	###### calibrate data from this instrument
-   
 	days = glob([DIN_HSAS "2022*"]); # read all days (stations for fice 2022)
 	istart = min(find(cellfun(@isempty, strfind(days, DAY_START))==0)); # find first day (station) to be processed
 	istop = max(find(cellfun(@isempty, strfind(days, DAY_STOP))==0)); # find last day (station) to be processed
@@ -317,8 +317,7 @@ for iSN = 1:length(sn)
 						continue;
 				    endif            
 			
-	      
-	  # tjor - extra filter step for FICE. This si done sow tha `out' corresponds to same wl bins as offset. Ideally, in future, processing, this should be done via modifying hsas_rd_digital counts - 
+	      # tjor - extra filter step for FICE. This is done so that `out' corresponds to same wl bins as offset. Ideally, in future, 	processing, this should be done via modifying hsas_rd_digital counts. 
 	           if length(out.wv) > length(cal{1}.wv)
 	           	out.(out.instru) = out.(out.instru)(:,cal{1}.usedpixels)
 	           	out.wv = cal{1}.wv
