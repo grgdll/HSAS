@@ -48,6 +48,9 @@ import matplotlib.patches as mpatches
 
 import dataframe_image as dfi
 
+######################
+# READ FUNCTIONS
+#######################
 
 # PML read functions
 def read_PML_data(path, bands):
@@ -76,7 +79,8 @@ def read_PML_spec(path, S):
         time_start = np.empty(78, dtype=object)
         windspeed = np.nan*np.ones(78)
         spec_data = np.nan*np.ones([78,19]) 
- 
+        azimuth = np.nan*np.ones(78)
+    
         # fill up data matrix
         i = 0
         for row in csv_reader:
@@ -84,6 +88,7 @@ def read_PML_spec(path, S):
                 station[i] = 70
                 time_start[i] = '2022-07-20 14:00:00' # missing staion- TS added (from Tartu)
                 windspeed[i] = 2.7
+                azimuth[i] =  90
                 i=i+1
             if(row[0]) == S: 
                     station[i] = row[1]
@@ -91,16 +96,19 @@ def read_PML_spec(path, S):
                         timestamp_i =  datetime.datetime.strptime(row[3], '%Y-%m-%d %H:%M:%S')
                         time_start[i] = str(timestamp_i)
                         windspeed[i] = row[4]
+                        azimuth[i] = row[5]
                         spec_data[i,:] = row[6:25]
                     else:
                         time_start[i]= '2022-07-14 09:00:00' # duplicate station (from Tartu)
                         windspeed[i] = 1.2
+                        azimuth[i] =  135
                     i = i + 1
 
         # convert to df format - columns are station, time, windspeed, spectra in each band
         df = pd.DataFrame(index = station) 
         df['time_start'] = time_start
         df['windspeed'] = windspeed
+        df['azimuth'] = azimuth
         for i in range(len(bands)):
                 df[str(bands[i])] = spec_data[:,i] 
        
@@ -129,6 +137,7 @@ def read_NASA_spec(path, S):
         data = np.nan*np.ones([78,19]) 
         time_start = np.empty(78, dtype=object)
         windspeed = np.nan*np.ones(78)
+        azimuth = np.nan*np.ones(78)
         station = np.arange(0,78)
        
         # fill up data matrix
@@ -138,6 +147,7 @@ def read_NASA_spec(path, S):
                 timestamp_i = datetime.datetime.strptime(row[3][0:19], '%Y-%m-%dT%H:%M:%S')
                 time_start[i] = str(timestamp_i)
                 windspeed[i] = row[4]
+                azimuth[i] = row[5]
                 data[i, :] = row[6:25]
              
          
@@ -145,6 +155,8 @@ def read_NASA_spec(path, S):
         df = pd.DataFrame(index = station) 
         df['time_start'] = time_start
         df['windspeed'] = windspeed
+        df['azimuth'] = azimuth
+        
         for i in range(len(bands)):
                 if S =='ed_average' or S == 'lsky_average' or S == 'lu_average' or S == 'nlw_average':
                     df[str(bands[i])] = 10*data[:,i] 
@@ -188,7 +200,7 @@ def read_TARTU_spec(path, S):
                 time_start[i] = str(timestamp_i)
                 windspeed[i] = row[6]
                 spec_data[i,:] = row[10:29]
-        
+   
 
         # convert to df format - columns are station, time, windspeed, spectra in each band
         df = pd.DataFrame(index = station) 
@@ -228,6 +240,7 @@ def read_RBINS_spec(path, S):
         spec_data = np.nan*np.ones([78,19]) 
         time_start = np.nan*np.ones(78,dtype=object)
         windspeed = np.nan*np.ones(78)
+        azimuth = np.nan*np.ones(78)
         station = np.arange(0,78)
        
         # fill up data matrix
@@ -238,11 +251,15 @@ def read_RBINS_spec(path, S):
                     timestamp_i = datetime.datetime.strptime(row[3][0:19], '%Y-%m-%dT%H:%M:%S')
                     time_start[i] = str(timestamp_i)
                     windspeed[i] = row[4]
+                    azimuth[i] = 135
                     spec_data[i,:] = row[6:25]
 
             
         # convert to df format - columns are station, time, windspeed, spectra in each band
         df = pd.DataFrame(index = station) 
+        df['time_start'] = time_start
+        df['windspeed'] = windspeed
+        df['azimuth'] = azimuth
         for i in range(len(bands)):
             if S == 'reflectance_average':
                 df[str(bands[i])] = spec_data[:,i]/np.pi
@@ -299,25 +316,178 @@ def read_HEREON_spec(path, S):
     
     return df
 
+# NOAA read functions 
+def read_NOAA_data(path, bands, Ed_PML):
+    'Wrappers to read spectra in dataframe format - Ed_PML used for reference time'
+    
+    Ed = read_NOAA_spec(path, 'Es_average') 
+    Lsky = read_NOAA_spec(path, 'Lsky_average') 
+    Lt =  read_NOAA_spec(path, 'Lt_average') 
+    Rrs =  read_NOAA_spec(path, 'Rrs_average') 
+    nLw = read_NOAA_spec(path, 'nlw_average')
 
-# Baselines
-def baseline_average(df_PML, df_NASA, df_TARTU, df_HEREON):
+    Ed = time_match_NOAA(Ed, Ed_PML)
+    nLw = time_match_NOAA(nLw, Ed_PML)
+
+    return Ed, Lsky, Lt, Rrs, nLw
+
+
+def read_NOAA_spec(path, S): 
+    'Returns dataframe for spectral type S, OLCI bands as columns, indexed by station'
+    
+    with open(path, 'r') as read_obj:
+       
+        # fill up data matrix  - case ed
+        if  S == 'Es_average':
+                
+            csv_reader = reader(read_obj)  
+            data = np.nan*np.ones([78,16]) 
+            time_start = np.empty(78, dtype=object)
+            # station = np.arange(0,78)
+            i = 0
+            for row in csv_reader:
+                if(row[0]) == S: 
+                    # print(row[6:22])
+                    timestamp_i = datetime.datetime.strptime(row[3][0:19], '%Y-%m-%dT%H:%M:%S')
+                    time_start[i] = str(timestamp_i)
+                    data[i,:] = row[6:22]
+                    i = i +1
+                
+            # convert to df format - 
+            df = pd.DataFrame() 
+            df['time_start'] = time_start
+            
+            for i in range(len(bands) - 3): # considers bands < 800 nm              
+                df[str(bands[i])] = 10*data[:,i] 
+           
+       # fill up data matrix - case nLw or Lw
+        elif S == 'nlw_average' or S == 'lw_average':
+                        
+            csv_reader = reader(read_obj)  
+            data = np.nan*np.ones([78,8]) 
+            time_start = np.empty(78, dtype=object)
+            # station = np.arange(0,78)
+            i = 0
+            for row in csv_reader:
+                if(row[0]) == S: 
+                    print(row[6:14])
+                    timestamp_i = datetime.datetime.strptime(row[3][0:19], '%Y-%m-%dT%H:%M:%S')
+                    time_start[i] = str(timestamp_i)
+                    data[i, :] = row[6:14]
+                    i = i +1
+                
+            # convert to df format - 
+            df = pd.DataFrame() 
+            df['time_start'] = time_start
+            
+            for i in range(8): # considers bands < 800 nm              
+                df[str(bands[i])] = 10*data[:,i] 
+                
+        else:
+            df = pd.DataFrame() 
+            
+    return df
+
+def time_match_NOAA(df_NOAA, Ed_PML):
+    'Sub routine to find station index for NOAA, and then reformat index of dataframe - assumes 10 min buffer'
+    
+    time_start_PML = [datetime.datetime.strptime(Ed_PML['time_start'][i],'%Y-%m-%d %H:%M:%S')  for i in range(len(Ed_PML))] 
+    time_start_NOAA = [datetime.datetime.strptime(df_NOAA['time_start'][i],'%Y-%m-%d %H:%M:%S')  for i in range(72)]        # NOAA just has 72 timestamps     
+    
+    time_start_NOAA_matching = np.nan*np.ones(78,dtype = object)
+    spec_data_matching = np.nan*np.ones([len(df_NOAA),len(df_NOAA.columns)]) 
+    tol = 10*60       
+    for i in range(len(time_start_PML)):
+         nearest_time, nearest_index = nearest(time_start_NOAA, time_start_PML[i])
+         delta_t = abs(time_start_PML[i] - nearest_time) 
+         print(delta_t)
+         print(nearest_index)
+         if delta_t.total_seconds() < tol:
+             time_start_NOAA_matching[i] = str(time_start_NOAA[nearest_index]) 
+             for j in range(len(df_NOAA.columns)-1):
+                 spec_data_matching[i,j] = df_NOAA[str(bands[j])][nearest_index]
+      
+    # convert to df format - columns are station, time, windspeed, spectra in each band
+    df = pd.DataFrame() 
+    df['time_start'] =  time_start_NOAA_matching
+    for j in range(len(df_NOAA.columns)-1): # considers bands < 800 nm              
+        df[str(bands[j])] =  spec_data_matching[:,j] 
+           
+    return df
+
+# CNR read functions 
+def read_CNR_data(path, bands):
+    'Wrappers to read spectra in dataframe format'
+    
+    Ed = read_CNR_spec(path, 'ed_average') 
+    Lsky = read_CNR_spec(path, 'lsky_average') 
+    Lt = read_CNR_spec(path, 'lu_average')
+    Rrs = read_CNR_spec(path, 'reflectance_average') 
+    Rrs_std = read_CNR_spec(path, 'reflectance_stdev')
+    nlw = read_CNR_spec(path, 'nlw') # - unc not std?
+
+    return Ed, Lsky, Lt, Rrs, Rrs_std, nlw
+
+def read_CNR_spec(path, S): 
+    'Returns dataframe for spectral type S, OLCI bands as columns, indexed by station'
+    with open(path, 'r') as read_obj:
+     
+        csv_reader = reader(read_obj)  
+
+        data = np.nan*np.ones([78,19]) 
+        time_start = np.empty(78, dtype=object)
+        station = np.arange(0,78)
+       
+        # fill up data matrix
+        for row in csv_reader:
+            if(row[0]) == S: 
+                station = row[1]
+                if station != 'None':
+                    i = int(row[1]) 
+                    timestamp_i = datetime.datetime.strptime(row[3][0:19], '%Y-%m-%dT%H:%MZ')
+                    time_start[i] = str(timestamp_i)
+                    data[i, :] = row[6:25]
+             
+         
+        # convert to df format - columns are station, time, windspeed, spectra in each band
+        df = pd.DataFrame() 
+        df['time_start'] = time_start
+        if S == 'reflectance_average' or S == 'reflectance_stdev':
+            for i in range(len(bands)):
+                  df[str(bands[i])] = data[:,i]/np.pi 
+        else:
+            for i in range(len(bands)):
+                  df[str(bands[i])] = data[:,i] 
+                  
+             
+    return df
+
+####################
+# BASELINES
+#####################
+
+def baseline_average(spec_type, df_PML, df_NASA, df_TARTU, df_HEREON):
     'Computes reference baseline (_R) based on weighthed mean of PML, NASA, HEREON, TARTU.'                             
     
-    # first, average seabird reference systems
-    df_seabird = ( 
-        # combine dataframes into a single dataframe
-        pd.concat([df_PML, df_NASA])
-        # replace 0 values with nan to exclude them from mean calculation
-        .replace(0, np.nan)
-        .reset_index()
-        # group by the row within the original dataframe
-        .groupby("index")
-        # calculate the mean
-        .mean()
-    )
-    
-    # second, aaverage trios reference systems
+    if spec_type == 'Ed':
+        # first, average seabird reference systems
+        df_seabird = ( 
+            # combine dataframes into a single dataframe
+            pd.concat([df_PML, df_NASA])
+            # replace 0 values with nan to exclude them from mean calculation
+            .replace(0, np.nan)
+            .reset_index()
+            # group by the row within the original dataframe
+            .groupby("index")
+            # calculate the mean
+            .mean()
+        )
+        
+    elif spec_type == 'Lsky' or  spec_type == 'Lt' or spec_type == 'Rrs':
+        # first, average seabird reference systems
+        df_seabird = df_PML
+       
+    # second, average trios reference systems
     df_trios = (
         # combine dataframes into a single dataframe
         pd.concat([df_TARTU, df_HEREON])
@@ -344,7 +514,7 @@ def baseline_average(df_PML, df_NASA, df_TARTU, df_HEREON):
     )
     
     # used to calculate number used in mean - require need 3 or more systems for mean to be defined
-    df_N =  pd.concat([df_PML, df_NASA, df_TARTU, df_HEREON])
+    df_N = pd.concat([df_PML, df_NASA, df_TARTU, df_HEREON])
     N_mean = np.zeros(78)
     for i in range(len(df_R)):
         no_of_records = 0
@@ -359,6 +529,40 @@ def baseline_average(df_PML, df_NASA, df_TARTU, df_HEREON):
     df_R['N_mean']  = N_mean    
     
     return df_R
+
+
+def baseline_average_V2(spec_type, df_PML, df_NASA, df_TARTU, df_HEREON):
+      'Computes reference baselines - assummes even weighting of each submitted team'''
+    
+      df_R = ( 
+            # combine dataframes into a single dataframe
+            pd.concat([df_PML, df_NASA, df_TARTU, df_HEREON])
+            # replace 0 values with nan to exclude them from mean calculation
+            .replace(0, np.nan)
+            .reset_index()
+            # group by the row within the original dataframe
+            .groupby("index")
+            # calculate the mean
+            .mean()
+        )
+       
+       # used to calculate number used in mean - require need 3 or more systems for mean to be defined
+      df_N =  pd.concat([df_PML, df_NASA, df_TARTU, df_HEREON])
+      N_mean = np.zeros(78)
+      for i in range(len(df_R)):
+           no_of_records = 0
+           for j in range(4):
+               if np.isnan(df_N['400'][i].iloc[j]) == False:
+                   no_of_records =  no_of_records + 1
+               N_mean[i] = no_of_records
+               
+       # PML used for timestamps and windspeeds (PML is complete dataset  so copied to reference)    
+      df_R['time_start']  = df_PML['time_start'] 
+      df_R['windspeed']  = df_PML['windspeed']     
+      df_R['N_mean']  = N_mean    
+         
+      return df_R
+
 
 def read_Aeronet_nLw(path_NLW, Ed_R, bands):
     ''' function to read nLw 1.5 data - assumes similar format to baseline _R dataframes
@@ -495,7 +699,7 @@ def QC_mask(path_QC, Ed_R, Ed_PML, Lsky_PML, Rrs_PML, Rrs_std_PML):
     
     
     filename  =  path_output +  '/' + 'AAOT_QCmask.csv'
-    df.to_csv(filename, na_rep ='NaN', index = False)
+    df.to_csv(filename, na_rep ='NaN')
     
     return df
 
@@ -504,36 +708,43 @@ def plot_dataandQCmasks():
    
     '''plot to show data and QC masks for AAOT: (i) Data no QC, (ii) QC, 
     (iii) Data with AOC QC, (vi) Data with cloudiness index w'''
+    # 
+    
     
     # 1. plot of all data records
     # creates plotting mask ,Z,  where records exist
-    Z = np.zeros([5, 78])
+    Z = np.zeros([7, 78])
     for i in range(78):
         for j in range(78):
-            if Ed_RBINS.index[j] == i and ~np.isnan(np.array(Ed_RBINS['400'])[j]) == 1:
+            if Ed_NOAA.index[j] == i and ~np.isnan(np.array(Ed_NOAA['400'])[j]) == 1:
                 Z[0,i] = 1
-            if Ed_NASA.index[j] == i and ~np.isnan(np.array(Ed_NASA['400'])[j]) == 1:
+            if Ed_CNR.index[j] == i and ~np.isnan(np.array(Ed_CNR['400'])[j]) == 1: # replace with CNR
                 Z[1,i] = 1
-            if Ed_HEREON.index[j] == i and ~np.isnan(np.array(Ed_HEREON['400'])[j]) == 1:
+            if Ed_RBINS.index[j] == i and ~np.isnan(np.array(Ed_RBINS['400'])[j]) == 1:
                 Z[2,i] = 1
-            if Ed_TARTU.index[j] == i and ~np.isnan(np.array(Ed_TARTU['400'])[j]) == 1:
+            if Ed_NASA.index[j] == i and ~np.isnan(np.array(Ed_NASA['400'])[j]) == 1:
                 Z[3,i] = 1
-            if Ed_PML.index[j] == i and ~np.isnan(np.array(Ed_PML['400'])[j]) == 1:
+            if Ed_HEREON.index[j] == i and ~np.isnan(np.array(Ed_HEREON['400'])[j]) == 1:
                 Z[4,i] = 1
+            if Ed_TARTU.index[j] == i and ~np.isnan(np.array(Ed_TARTU['400'])[j]) == 1:
+                Z[5,i] = 1
+            if Ed_PML.index[j] == i and ~np.isnan(np.array(Ed_PML['400'])[j]) == 1:
+                Z[6,i] = 1
     
     # figure for stations
     plt.figure(figsize=(12,8))
-    plt.rc('font', size=18)         
-    plt.pcolor(Z,edgecolors='k',cmap='bwr')
+    plt.rc('font', size=18)       
+    cmap1 = matplotlib.cm.get_cmap('coolwarm')
+    plt.pcolor(Z,edgecolors='k',cmap=cmap1)
     plt.title('AAOT station mask')
     
     plt.xlabel('Station number')
-    ylabels = ['RBINS','NASA','HEREON', 'TARTU','PML']
+    ylabels = ['NOAA', 'CNR','RBINS','NASA','HEREON', 'TARTU','PML']
     plt.gca().set_yticklabels(ylabels)
-    plt.gca().set_yticks([0.5,1.5,2.5,3.5,4.5])
+    plt.gca().set_yticks([0.5,1.5,2.5,3.5,4.5,5.5,6.5])
     
-    red_patch = mpatches.Patch(color='red', label='Data')
-    blue_patch = mpatches.Patch(color='blue', label='No data')
+    red_patch = mpatches.Patch(color=cmap1(1.001), label='Data')
+    blue_patch = mpatches.Patch(color=cmap1(0), label='No data')
     plt.legend(handles=[red_patch,blue_patch],loc=3)
     filename  =  path_output +  '/' + 'stationmask.png'
     plt.savefig(filename)
@@ -547,15 +758,15 @@ def plot_dataandQCmasks():
     # figure for stations
     plt.figure(figsize=(14,6))
     plt.rc('font', size=18)      
-    plt.pcolor(Z,edgecolors='k',cmap='bwr')
+    plt.pcolor(Z,edgecolors='k',cmap='coolwarm')
     plt.title('Quality control mask')
     ylabels = ['2. Env.' + '\n' + '& CV[$R_{rs}$]', '1. AOC:'  +'\n' +  'SEAPRISM']
     plt.xlabel('Station number')
     plt.gca().set_yticklabels(ylabels)
     plt.gca().set_yticks([0.5,1.5])
     
-    red_patch = mpatches.Patch(color='red', label='Pass QC')
-    blue_patch = mpatches.Patch(color='blue', label='Fail QC')
+    red_patch = mpatches.Patch(color=cmap1(1.001), label='Pass QC')
+    blue_patch = mpatches.Patch(color=cmap1(0), label='Fail QC')
     plt.legend(handles=[red_patch,blue_patch],loc=4)  
     
     filename  =  path_output +  '/' + 'QCmask.png'
@@ -564,70 +775,75 @@ def plot_dataandQCmasks():
     # 3. plot of data wwith AOC QC
     
     # creates plotting mask ,Z, where records exist
-    Z = np.zeros([5, 78])
+    Z = np.zeros([7, 78])
     for i in range(78):
         for j in range(78):
-            if Ed_RBINS.index[j] == i and ~np.isnan(np.array(Ed_RBINS['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
+            if Ed_NOAA.index[j] == i and ~np.isnan(np.array(Ed_NOAA['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
                 Z[0,i] = 1
-            if Ed_NASA.index[j] == i and ~np.isnan(np.array(Ed_NASA['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
-                Z[1,i] = 1
-            if Ed_HEREON.index[j] == i and ~np.isnan(np.array(Ed_HEREON['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
+            if Ed_CNR.index[j] == i and ~np.isnan(np.array(Ed_CNR['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
+                Z[1,i] = 1    
+            if Ed_RBINS.index[j] == i and ~np.isnan(np.array(Ed_RBINS['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
                 Z[2,i] = 1
-            if Ed_TARTU.index[j] == i and ~np.isnan(np.array(Ed_TARTU['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
+            if Ed_NASA.index[j] == i and ~np.isnan(np.array(Ed_NASA['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
                 Z[3,i] = 1
-            if Ed_PML.index[j] == i and ~np.isnan(np.array(Ed_PML['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
+            if Ed_HEREON.index[j] == i and ~np.isnan(np.array(Ed_HEREON['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
                 Z[4,i] = 1
+            if Ed_TARTU.index[j] == i and ~np.isnan(np.array(Ed_TARTU['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
+                Z[5,i] = 1
+            if Ed_PML.index[j] == i and ~np.isnan(np.array(Ed_PML['400'])[j]) == 1 and Q_mask['QC_AOC_3'][j] == 1:
+                Z[6,i] = 1
     
     # figure for stations
     plt.figure(figsize=(12,8))
     plt.rc('font', size=18)         
-    plt.pcolor(Z,edgecolors='k',cmap='bwr')
+    plt.pcolor(Z,edgecolors='k',cmap='coolwarm')
     plt.title('AAOT station mask:' + '\n' +  'AOC-SEAPRISM QC and $\geq$ 3 reference systems with data')
     plt.xlabel('Station number')
-    ylabels = ['RBINS','NASA','HEREON', 'TARTU','PML']
+    ylabels = ['NOAA','CNR', 'RBINS','NASA','HEREON', 'TARTU','PML']
     plt.gca().set_yticklabels(ylabels)
-    plt.gca().set_yticks([0.5,1.5,2.5,3.5,4.5])
+    plt.gca().set_yticks([0.5,1.5,2.5,3.5,4.5,5.5,6.5])
     
-    red_patch = mpatches.Patch(color='red', label='Data')
-    blue_patch = mpatches.Patch(color='blue', label='No data')
+    red_patch = mpatches.Patch(color=cmap1(1.001), label='Data')
+    blue_patch = mpatches.Patch(color=cmap1(0), label='No data')
     plt.legend(handles=[red_patch,blue_patch],loc=3)
     
     filename  =  path_output +  '/' + 'stationmask_QC1.png'
     plt.savefig(filename)
     
     # 3. plot of data with Cloudiness Index QC
-    
-    
-    
-    
+
     # creates plotting mask ,Z,  where records exist
-    Z = np.zeros([5, 78])
+    Z = np.zeros([7, 78])
     for i in range(78):
         for j in range(78):
-            if Ed_RBINS.index[j] == i and ~np.isnan(np.array(Ed_RBINS['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
+            if Ed_NOAA.index[j] == i and ~np.isnan(np.array(Ed_NOAA['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
                 Z[0,i] = 1
-            if Ed_NASA.index[j] == i and ~np.isnan(np.array(Ed_NASA['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
+            if Ed_CNR.index[j] == i and ~np.isnan(np.array(Ed_CNR['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
                 Z[1,i] = 1
-            if Ed_HEREON.index[j] == i and ~np.isnan(np.array(Ed_HEREON['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
+            if Ed_RBINS.index[j] == i and ~np.isnan(np.array(Ed_RBINS['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
                 Z[2,i] = 1
-            if Ed_TARTU.index[j] == i and ~np.isnan(np.array(Ed_TARTU['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
+            if Ed_NASA.index[j] == i and ~np.isnan(np.array(Ed_NASA['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
                 Z[3,i] = 1
-            if Ed_PML.index[j] == i and ~np.isnan(np.array(Ed_PML['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
+            if Ed_HEREON.index[j] == i and ~np.isnan(np.array(Ed_HEREON['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
                 Z[4,i] = 1
+            if Ed_TARTU.index[j] == i and ~np.isnan(np.array(Ed_TARTU['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
+                Z[5,i] = 1
+            if Ed_PML.index[j] == i and ~np.isnan(np.array(Ed_PML['400'])[j]) == 1 and Q_mask['QC_CI_3'][j] == 1:
+                Z[6,i] = 1
     
     # figure for stations
     plt.figure(figsize=(12,8))
     plt.rc('font', size=18)         
-    plt.pcolor(Z,edgecolors='k',cmap='bwr')
+    plt.pcolor(Z,edgecolors='k',cmap='coolwarm')
     plt.title('AAOT station mask:' + '\n' + 'C.I and CV[$R_{rs}$] QC and $\geq$ 3 reference systems with data')
     
     plt.xlabel('Station number')
-    ylabels = ['RBINS','NASA','HEREON', 'TARTU','PML']
+    ylabels = ['NOAA','CNR', 'RBINS','NASA','HEREON', 'TARTU','PML']
     plt.gca().set_yticklabels(ylabels)
-    plt.gca().set_yticks([0.5,1.5,2.5,3.5,4.5])
+    plt.gca().set_yticks([0.5,1.5,2.5,3.5,4.5,5.5,6.5])
     
-    red_patch = mpatches.Patch(color='red', label='Data')
-    blue_patch = mpatches.Patch(color='blue', label='No data')
+    red_patch = mpatches.Patch(color=cmap1(1.001), label='Data')
+    blue_patch = mpatches.Patch(color=cmap1(0), label='No data')
     plt.legend(handles=[red_patch,blue_patch],loc=3)
     
     filename  =  path_output +  '/' + 'stationmask_QC2.png'
@@ -635,11 +851,12 @@ def plot_dataandQCmasks():
     
     return
 
+
 def scatter_subplot(spec_type, system, plot_index, ylab, xlab, limits, ticks, df_sys, df_R):
     ''' suplot routine for scatter plot'''
    
     colors = cm.rainbow(np.linspace(0,1,10))# color mask to match rrs with time series   
-    plt.subplot(2,3,plot_index)    
+    plt.subplot(2,4,plot_index)    
     X = np.arange(0,2000,1)
     plt.plot(X,X,color='gray')
     plt.title(system)
@@ -652,41 +869,47 @@ def scatter_subplot(spec_type, system, plot_index, ylab, xlab, limits, ticks, df
         for i in range(10):
             plt.scatter(df_R[str(bands[i])], df_sys[str(bands[i])], color=colors[i], facecolors='none',label=str(bands[i]) + ' nm')
     
+    if plot_index == 1: 
+        plt.legend(fontsize=10)
+    
     # ables
     plt.gca().set_aspect('equal')
     plt.xlim(limits)
     plt.ylim(limits)
-    plt.xticks(ticks, rotation=45)
+    plt.xticks(ticks)
     plt.yticks(ticks)
-    if plot_index==1:
-        plt.legend(fontsize=12)
-    if plot_index==1 or plot_index== 4:
-        plt.ylabel(ylab)
-    if  plot_index==3 or plot_index== 4 or plot_index== 5: # will need changing when more systems are added
-        plt.xlabel(xlab)
+    
+    if plot_index < 4:
+        plt.xticks() 
+
     if spec_type == 'Rrs':    
         plt.xticks(ticks, rotation=45)
         plt.yticks(ticks)
+    
     return
 
-def plot_scatter(spec_type,df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBINS, Q_mask, Qtype = 'AOC_3'):
+
+def plot_scatter(spec_type,df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBINS, df_CNR, df_NOAA,  Q_mask, Qtype = 'AOC_3'):
     ''' suplot routine for scatter plot'''
   
+    # qc filter
     df_PML = df_PML[Q_mask[Qtype]==1]
     df_NASA = df_NASA[Q_mask[Qtype]==1]
     df_TARTU = df_TARTU[Q_mask[Qtype]==1]
     df_HEREON = df_HEREON[Q_mask[Qtype]==1]
     df_RBINS = df_RBINS[Q_mask[Qtype]==1]
-    
+    df_CNR = df_CNR[Q_mask[Qtype]==1]
+    df_NOAA = df_NOAA[Q_mask[Qtype]==1]
+
     df_R = df_R[Q_mask[Qtype]==1]
     
     # scatter plot figure
-    plt.figure(figsize=(18,12))
+    fig = plt.figure(figsize=(24,12))
     plt.rc('font', size=18)      
     if spec_type == 'Ed':
         xlab ='Reference: $E_{d}^{r}$(0$^{+}$, $\lambda)$ [mW m$^{-2}$ nm$^{-1}$]'
         ylab = '$E_{d}$(0$^{+}$, $\lambda)$ [mW m$^{-2}$ nm$^{-1}$]'
-        limits = [800, 1600]
+        limits = [800, 1650]
         ticks = [800, 1000, 1200,1400, 1600]
         plt.suptitle('System inter-comparison for downwelling irradiance: $E_{d}$(0$^{+}$,$\lambda$)')
     elif spec_type == 'Lsky':
@@ -696,7 +919,7 @@ def plot_scatter(spec_type,df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBINS,
         ticks = [0, 30, 60, 90, 120]
         plt.suptitle('System inter-comparison for sky radiance: $L_{sky}$(0$^{+}$,$\lambda$)')
     elif spec_type == 'Lt':
-        xlab ='Reference: $L_{t}^{r}$(0$^{+}$, $\lambda)$ [mW m$^{-2}$ nm$^{-1}$ sr$^{-1}$]'
+        xlab ='Reference: $L_{t}^{r}$(0$^{+})$, $\lambda)$ [mW m$^{-2}$ nm$^{-1}$ sr$^{-1}$]'
         ylab = '$L_{t}$(0$^{+}$, $\lambda)$ [mW m$^{-2}$ nm$^{-1}$ sr$^{-1}$]'
         limits = [0, 25]
         ticks = [0, 5, 10, 15, 20 , 25]
@@ -714,29 +937,41 @@ def plot_scatter(spec_type,df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBINS,
         ticks = [0, 5, 10, 15, 20 , 25]
         plt.suptitle('System inter-comparison for normalized water-leaving radiance: $L_{wn}$($\lambda$)')
        
-    
+    fig.supxlabel(xlab)
+    fig.supylabel(ylab)
+        
     # subplots
     subtitle  = 'PML: N = ' + str(np.sum(~np.isnan(df_PML['400'])))
     index = 1
     scatter_subplot(spec_type,subtitle, index, ylab, xlab, limits, ticks, df_PML, df_R)
     
-    subtitle  = 'NASA: N = ' + str(np.sum(~np.isnan(df_NASA['400'])))
+    subtitle = 'HEREON: N = '  + str(np.sum(~np.isnan(df_HEREON['400'])))
     index = 2
-    scatter_subplot(spec_type,subtitle, index, ylab, xlab, limits, ticks, df_NASA, df_R)
+    scatter_subplot(spec_type,subtitle, index,  ylab, xlab, limits, ticks, df_HEREON, df_R)
     
     subtitle = 'TARTU: N = '  + str(np.sum(~np.isnan(df_TARTU['400'])))
     index = 3
     scatter_subplot(spec_type,subtitle, index, ylab, xlab, limits, ticks, df_TARTU, df_R)
     
-    subtitle = 'HEREON: N = '  + str(np.sum(~np.isnan(df_HEREON['400'])))
+    subtitle  = 'NASA: N = ' + str(np.sum(~np.isnan(df_NASA['400'])))
     index = 4
-    scatter_subplot(spec_type,subtitle, index,  ylab, xlab, limits, ticks, df_HEREON, df_R)
-    
+    scatter_subplot(spec_type,subtitle, index, ylab, xlab, limits, ticks, df_NASA, df_R)
+
     subtitle = 'RBINS: N = ' + str(np.sum(~np.isnan(df_RBINS['400'])))
     index = 5
     scatter_subplot(spec_type,subtitle,index, ylab, xlab, limits, ticks, df_RBINS, df_R)
     
-    plt.tight_layout()
+    subtitle = 'CNR: N = ' + str(np.sum(~np.isnan(df_CNR['400'])))
+    index = 6
+    scatter_subplot(spec_type,subtitle,index, ylab, xlab, limits, ticks, df_CNR, df_R)
+    
+    if spec_type =='Ed' or spec_type == 'nLw':
+        subtitle = 'NOAA: N = ' + str(np.sum(~np.isnan(df_NOAA['400'])))
+        index = 7
+        scatter_subplot(spec_type,subtitle,index, ylab, xlab, limits, ticks, df_NOAA, df_R)
+
+    plt.tight_layout(pad=1.8)
+
     
     filename  =  path_output +  '/' + spec_type + '_scattterplot.png'
     plt.savefig(filename)
@@ -758,13 +993,14 @@ def _resid_subplot(spec_type,system, plot_index, ylab, percent_limits, df_sys, d
         resid.append([])
         resid.append([])
     else:
-        resid = [] # residual distirbution in each band
+        resid = [] # residual distribution in each band
         for i in range(10):
             resid_i = 100*np.array((df_sys[str(bands[i])] -  df_R[str(bands[i])])/df_R[str(bands[i])])
             resid_i =  resid_i[~np.isnan(resid_i)]
             resid.append(resid_i)
 
-    plt.subplot(2,3,plot_index) 
+    #
+    plt.subplot(2,4,plot_index) 
     plt.title(system)
     plt.plot(np.arange(0,12,1), np.zeros(12),linestyle ='dashed',color='gray')
     bp = plt.boxplot(resid ,showfliers=True,patch_artist=True, medianprops=dict(color='black'), whis=[10,90]) 
@@ -774,17 +1010,19 @@ def _resid_subplot(spec_type,system, plot_index, ylab, percent_limits, df_sys, d
         bp['boxes'][i].set_facecolor(colors[i])
    
     plt.xticks([1,2,3,4,5,6,7,8,9,10], bands[0:10])
-    plt.xticks(rotation=45)
+    plt.xticks(rotation = 45)
     
-    if plot_index==1 or plot_index== 4:
-        plt.ylabel(ylab)
-    if plot_index==3 or plot_index== 4 or plot_index== 5:
-        plt.xlabel('Wavelength [nm]')
+    plt.grid(axis='y') 
+    
+    #if plot_index==1 or plot_index== 5:
+     #   plt.ylabel(ylab)
+    #if plot_index > 3:
+     #   plt.xlabel('Wavelength [nm]')
   
     return
 
 
-def plot_residuals(spec_type, df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBINS, Q_mask, Qtype = 'QC_AOC_3'):
+def plot_residuals(spec_type, df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBINS, df_CNR, df_NOAA, Q_mask, Qtype = 'QC_AOC_3'):
     ''' Funtion to plot spectral dependence of % residuals following Tilstone 2020'''  
     
     # QC filtering 
@@ -793,52 +1031,121 @@ def plot_residuals(spec_type, df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBI
     df_TARTU = df_TARTU[Q_mask[Qtype]==1]
     df_HEREON = df_HEREON[Q_mask[Qtype]==1]
     df_RBINS = df_RBINS[Q_mask[Qtype]==1]
+    df_CNR = df_CNR[Q_mask[Qtype]==1]
+    df_NOAA = df_NOAA[Q_mask[Qtype]==1]
+    
+    
     df_R = df_R[Q_mask[Qtype]==1]
     
     # spectral reiduals plot
-    plt.figure(figsize=(18,12))
-    plt.rc('font',size=18)  
+    fig= plt.figure(figsize=(18,12))
+    plt.rc('font',size=16)  
     if spec_type == 'Ed':
         ylab = '$E_{d}$ residual [%]'
         plt.suptitle('Percentage residuals for downwelling irradiance: $E_{d}$(0$^{+}$,$\lambda$)')
-        percent_limits = 8
+        percent_limits = 6
+        percent_limits_2 = 12
     if spec_type == 'Lsky':
          ylab = '$L_{sky}$ residual [%]'
          plt.suptitle('Percentage residuals for sky radiance: $L_{sky}$(0$^{+}$,$\lambda$)')
-         percent_limits = 30
+         percent_limits = 6
+         percent_limits_2 = 12
     if spec_type == 'Lt':
          ylab = '$L_{t}$ residual [%]'
          plt.suptitle('Percentage residuals for upwelling radiance: $L_{t}$(0$^{+}$,$\lambda$)')
-         percent_limits = 16
+         percent_limits = 10
+         percent_limits_2 = 20
     if spec_type == 'Rrs':
           ylab = '$R_{rs}$ residual [%]'
           plt.suptitle('Percentage residuals for remote-sensing reflectance: $R_{rs}$($\lambda$)')
-          percent_limits = 24
+          percent_limits = 16
+          percent_limits_2 = 32
     if spec_type == 'nLw':
           ylab = '$L_{wn}$ residual [%]'
           percent_limits = 40
+          percent_limits_2 = 40
           plt.suptitle('Percentage residuals for normalized water-leaving radiance: $L_{wn}$($\lambda$)')
-     
-          
+
+    xlab = 'Wavelength'
+    fig.supxlabel(xlab)
+    fig.supylabel(ylab)
+        
     subtitle  = 'PML: N = ' + str(np.sum(~np.isnan(df_PML['400'])))
     index = 1
     _resid_subplot(spec_type, subtitle, index, ylab, percent_limits, df_PML, df_R ,bands)
     
-    subtitle  = 'NASA: N = ' + str(np.sum(~np.isnan(df_NASA['400'])))
+    subtitle  = 'HEREON: N = ' + str(np.sum(~np.isnan(df_HEREON['400'])))
     index = 2
-    _resid_subplot(spec_type, subtitle, index, ylab, percent_limits, df_NASA, df_R ,bands)
+    _resid_subplot(spec_type,subtitle, index, ylab,percent_limits, df_HEREON, df_R ,bands)
     
     subtitle  = 'TARTU: N = ' + str(np.sum(~np.isnan(df_TARTU['400'])))
     index = 3
     _resid_subplot(spec_type,subtitle, index, ylab, percent_limits, df_TARTU, df_R ,bands)
+
+   
+    if spec_type == 'Lsky' :
+
+        subtitle  = 'RBINS: N = ' + str(np.sum(~np.isnan(df_RBINS['400'])))
+        index = 5
+        _resid_subplot(spec_type,subtitle, index, ylab,percent_limits_2, df_RBINS, df_R ,bands)
+        
+        subtitle  = 'NASA: N = ' + str(np.sum(~np.isnan(df_CNR['400'])))
+        index = 4
+        _resid_subplot(spec_type, subtitle, index, ylab, percent_limits_2, df_NASA, df_R ,bands)
+        
+        subtitle  = 'CNR: N = ' + str(np.sum(~np.isnan(df_CNR['400'])))
+        index = 6
+        _resid_subplot(spec_type, subtitle, index, ylab, percent_limits_2, df_CNR, df_R ,bands)
+   
+    elif spec_type == 'Lt' :
+        
+        subtitle  = 'NASA: N = ' + str(np.sum(~np.isnan(df_NASA['400'])))
+        index = 4
+        _resid_subplot(spec_type, subtitle, index, ylab, percent_limits, df_NASA, df_R ,bands)
+        
+        subtitle  = 'RBINS: N = ' + str(np.sum(~np.isnan(df_RBINS['400'])))
+        index = 5
+        _resid_subplot(spec_type,subtitle, index, ylab,percent_limits_2, df_RBINS, df_R ,bands)
     
-    subtitle  = 'HEREON: N = ' + str(np.sum(~np.isnan(df_HEREON['400'])))
-    index = 4
-    _resid_subplot(spec_type,subtitle, index, ylab,percent_limits, df_HEREON, df_R ,bands)
+                
+        subtitle  = 'CNR: N = ' + str(np.sum(~np.isnan(df_CNR['400'])))
+        index = 6
+        _resid_subplot(spec_type,subtitle, index, ylab,percent_limits_2, df_CNR, df_R ,bands)
+        
+    elif spec_type == 'Rrs' :
+          
+        subtitle  = 'NASA: N = ' + str(np.sum(~np.isnan(df_NASA['400'])))
+        index = 4
+        _resid_subplot(spec_type, subtitle, index, ylab, percent_limits, df_NASA, df_R ,bands)
+        
+        subtitle  = 'RBINS: N = ' + str(np.sum(~np.isnan(df_RBINS['400'])))
+        index = 5
+        _resid_subplot(spec_type,subtitle, index, ylab,percent_limits_2, df_RBINS, df_R ,bands)
     
-    subtitle  = 'RBINS: N = ' + str(np.sum(~np.isnan(df_RBINS['400'])))
-    index = 5
-    _resid_subplot(spec_type,subtitle, index, ylab,percent_limits, df_RBINS, df_R ,bands)
+        subtitle  = 'CNR: N = ' + str(np.sum(~np.isnan(df_CNR['400'])))
+        index = 6
+        _resid_subplot(spec_type,subtitle, index, ylab,percent_limits_2, df_CNR, df_R ,bands)
+   
+    else: 
+
+      subtitle  = 'NASA: N = ' + str(np.sum(~np.isnan(df_NASA['400'])))
+      index = 4
+      _resid_subplot(spec_type, subtitle, index, ylab, percent_limits, df_NASA, df_R ,bands)
+      
+      subtitle  = 'RBINS: N = ' + str(np.sum(~np.isnan(df_RBINS['400'])))
+      index = 5
+      _resid_subplot(spec_type,subtitle, index, ylab,percent_limits, df_RBINS, df_R ,bands)
+    
+      subtitle  = 'CNR: N = ' + str(np.sum(~np.isnan(df_CNR['400'])))
+      index = 6
+      _resid_subplot(spec_type,subtitle, index, ylab,percent_limits, df_CNR, df_R ,bands)
+
+        
+    if spec_type == 'Ed' or  spec_type == 'nLw':
+        subtitle  = 'NOAA: N = ' + str(np.sum(~np.isnan(df_NOAA['400'])))
+        index = 7
+        _resid_subplot(spec_type,subtitle, index, ylab, percent_limits_2, df_NOAA, df_R ,bands)
+        
     
     plt.tight_layout()
     
@@ -848,7 +1155,7 @@ def plot_residuals(spec_type, df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBI
     return
 
 
-def tabular_summary(spec_type, df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBINS, Q_mask, Qtype = 'QC_AOC_3'):
+def tabular_summary(spec_type, df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RBINS, df_CNR, df_NOAA, Q_mask, Qtype = 'QC_AOC_3'):
     ''' Funtion to output tabular summary of results based on Tilstone 2020'''    
     
     # QC filtering
@@ -857,19 +1164,24 @@ def tabular_summary(spec_type, df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RB
     df_TARTU = df_TARTU[Q_mask[Qtype]==1]
     df_HEREON = df_HEREON[Q_mask[Qtype]==1]
     df_RBINS = df_RBINS[Q_mask[Qtype]==1]
+    df_CNR = df_CNR[Q_mask[Qtype]==1]
+    df_NOAA = df_NOAA[Q_mask[Qtype]==1]
+
     df_R = df_R[Q_mask[Qtype]==1]
         
     #  columns for table
-    Institution = ['PML', 'NASA', 'TARTU', 'HEREON', 'RBINS']
+    Institution = ['PML', 'NASA', 'TARTU', 'HEREON', 'RBINS', 'CNR', 'NOAA']
     
-    Sensor = ['Seabird-HyperSAS', 'Seabird-HyperSAS', 'TriOS-RAMSES', 'TriOS-RAMSES', '']
+    Sensor = ['Seabird-HyperSAS', 'Seabird-HyperSAS', 'TriOS-RAMSES', 'TriOS-RAMSES', '', '', '']
     
     N_PML = np.sum(~np.isnan(df_PML['400']))
     N_NASA = np.sum(~np.isnan(df_NASA['400']))
     N_TARTU = np.sum(~np.isnan(df_TARTU['400']))
     N_HEREON = np.sum(~np.isnan(df_HEREON['400']))
     N_RBINS = np.sum(~np.isnan(df_RBINS['400']))
-    N_meas = [N_PML, N_NASA, N_TARTU, N_HEREON, N_RBINS]
+    N_CNR = np.sum(~np.isnan(df_CNR['400']))
+    N_NOAA = np.sum(~np.isnan(df_NOAA['400']))
+    N_meas = [N_PML, N_NASA, N_TARTU, N_HEREON, N_RBINS, N_CNR, N_NOAA]
     
     RMSD_442_PML = np.sqrt(np.nanmean((df_PML['442.5'] - df_R['442.5'])**2))
     RMSD_442_NASA = np.sqrt(np.nanmean((df_NASA['442.5'] - df_R['442.5'])**2))
@@ -945,63 +1257,125 @@ def tabular_summary(spec_type, df_R, df_PML, df_NASA, df_TARTU, df_HEREON, df_RB
     
     return summary
 
+def filter_by_azimuth(df_PML, df_NASA, df_RBINS, tol=1):
+    '''function to filter NASA and RBINS via azimuth'''   
+    
+    delta_phi_NASA = abs(df_NASA['azimuth']) - abs(df_PML['azimuth'])
+    delta_phi_RBINS = abs(df_RBINS['azimuth']) - abs(df_PML['azimuth'])
+   
+    # delta_phi_NASA = df_NASA['azimuth'] - df_PML['azimuth']
+    # delta_phi_RBINS = df_RBINS['azimuth'] - df_PML['azimuth']
+    
+    for i in range(78):
+       if abs(delta_phi_NASA[i]) > tol:
+         df_NASA.iloc[i] = np.nan
+       if abs(delta_phi_RBINS[i]) > tol:
+         df_RBINS.iloc[i] = np.nan
+         
+    return df_NASA, df_RBINS
+
+def azimuth_plot():
+    
+    plt.figure()
+    plt.title('Relative azimuth (absolute value)')
+    plt.plot(Ed_PML.index, abs(Ed_PML['azimuth']), label= 'PML, TARTU, HEREON',color='orange',linewidth = 3)
+    plt.plot(Ed_NASA.index, abs(Ed_NASA['azimuth']), label= 'NASA', linestyle='dashed',color='blue',linewidth = 3)
+    plt.plot(Ed_RBINS.index, abs(Ed_RBINS['azimuth']), label= 'RBINS', linestyle='dashed', color='red',linewidth =3)
+    plt.xlabel('Station number')
+    plt.ylabel('|$\phi$| (deg)')
+    plt.legend()
+    
+    #plt.figure()
+    #plt.title('Relative azimuth')
+    #plt.plot(Ed_PML.index, Ed_PML['azimuth'], label= 'PML, TARTU, HEREON',color='orange',  linewidth = 3)
+    #plt.plot(Ed_NASA.index, Ed_NASA['azimuth'], label= 'NASA', linestyle='dashed',color='blue', linewidth = 3)
+    #plt.plot(Ed_RBINS.index, Ed_RBINS['azimuth'], label= 'RBINS', linestyle='dashed', color='red', linewidth = 3)
+    #plt.xlabel('Station number')
+    #plt.ylabel('$\phi$ (deg)')
+    #plt.legend()
+    
+    filename  =  path_output +  '/azimuth.png'
+    plt.savefig(filename)
+
+    return
+
 
 if __name__ == '__main__':
     
-    # path to data
+    # options
+    # baseline =
+    # QC method =
+    
+    # path to data + output
     dir_data = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/System_intercomparrison/DataSubmissions'
- 
-    path_PML = dir_data + '/PML/FICE_submission_V2/FRM4SOC_2_FICE_22_AAOT_PML_HSAS_stationsummary_L1timesWindspeeds.csv'
-    path_NASA = dir_data + '/NASA/FRM4SOC_2_FICE_22_AAOT_pySAS_Sentinel3A.csv'
+    path_output = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/System_intercomparrison/Output'
+
+    # team submissions
+    path_PML = dir_data + '/PML/FICE_submission_V2/FRM4SOC_2_FICE_22_AAOT_PML_HSAS_stationsummary_L1timesWindspeeds_phi_output.csv'
+    path_NASA = dir_data + '/NASA/FRM4SOC_2_FICE_22_AAOT_pySAS_Sentinel3A_rev1.csv'
     path_TARTU = dir_data + '/UniTartu/averages.csv'  
     path_RBINS = dir_data + '/RBINS/FRM4SOC2_FICE_RBINS_2022-09-16.csv'
     path_HEREON = dir_data + '/HEREON/FRM4SOC2_FICE22_HEREON_DATA_OLCI'
-    path_NOA = ''
-    path_CNR = ''
-    
+    path_NOAA = dir_data + '/NOAA/NOAA_Hyperpro_sheet2.csv'
+    path_CNR = dir_data +  '/CNR/FRM4SOC_2_FICE_22_AAOT_CNR_HYPSTAR_averages+stdev.csv'
+
+    # addtional data (QC + references)    
     path_QC = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/System_intercomparrison/Aeronet_QC_mask/FRM4SOC-AAOT_V3_ope.txt'
-    path_NLW = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/System_intercomparrison/nLw_Zibordireference'
-    
-    path_output = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/System_intercomparrison/Output'
+    path_NLW = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/System_intercomparrison/nLw_Zibordireference'    
+
     #OLCI bands
     bands = [str(400), str(412.5), str(442.5),	str(490), str(510), str(560), str(620),	str(665), str(673.75), str(681.25), str(708.75), str(753.75), str(761.25), str(764.375), str(767.5), str(778.75), str(865), str(885), str(900)]
  
-    # Read data
+    # Read data - each team has own file reader to homogenize data
     Ed_PML, Lsky_PML, Lt_PML, Rrs_PML, Rrs_std_PML, nLw_PML = read_PML_data(path_PML, bands)
     Ed_NASA, Lsky_NASA, Lt_NASA, Rrs_NASA, Rrs_std_NASA, nLw_NASA = read_NASA_data(path_NASA, bands)
     Ed_TARTU, Lsky_TARTU, Lt_TARTU, Rrs_TARTU, Rrs_std_TARTU, nLw_TARTU = read_TARTU_data(path_TARTU, bands)
     Ed_HEREON, Lsky_HEREON, Lt_HEREON, Rrs_HEREON, Rrs_std_HEREON, nLw_HEREON = read_HEREON_data(path_HEREON, bands)
     Ed_RBINS, Lsky_RBINS, Lt_RBINS, Rrs_RBINS, Rrs_std_RBINS, nLw_RBINS = read_RBINS_data(path_RBINS, bands)
+    Ed_NOAA, Lsky_NOAA, Lt_NOAA, Rrs_NOAA, nLw_NOAA  = read_NOAA_data(path_NOAA, bands, Ed_PML) # PML timestamps used to reference staion no.
+    Ed_CNR, Lsky_CNR, Lt_CNR, Rrs_CNR, Rrs_std_CNR, nLw_CNR = read_CNR_data(path_CNR, bands)
     
-    # Calculate Baseline from 4-way mean (R==reference)
-    Ed_R = baseline_average(Ed_PML, Ed_NASA, Ed_TARTU, Ed_HEREON)
-    Lsky_R = baseline_average(Lsky_PML, Lsky_NASA, Lsky_TARTU, Lsky_HEREON)
-    Lt_R = baseline_average(Lt_PML, Lt_NASA, Lt_TARTU, Lt_HEREON)
-    Rrs_R = baseline_average(Rrs_PML, Rrs_NASA, Rrs_TARTU, Rrs_HEREON)
-    Rrs_std_R = baseline_average(Rrs_std_PML, Rrs_std_NASA, Rrs_std_TARTU, Rrs_std_HEREON)
+    # Azimuth filtering for NASA and RBINS
+    Lsky_NASA, Lsky_RBINS = filter_by_azimuth(Lsky_PML, Lsky_NASA, Lsky_RBINS)
+    Lt_NASA, Lt_RBINS = filter_by_azimuth(Lt_PML, Lt_NASA, Lt_RBINS)
+    Rrs_NASA, Rrs_RBINS = filter_by_azimuth(Rrs_PML, Rrs_NASA, Rrs_RBINS)
+    
+    # References/ baselines
+    # Ed_R = baseline_average('Ed', Ed_PML, Ed_NASA, Ed_TARTU, Ed_HEREON)
+    # Lsky_R = baseline_average('Lsky', Lsky_PML, Lsky_NASA, Lsky_TARTU, Lsky_HEREON)
+    # Lt_R = baseline_average('Lt', Lt_PML, Lt_NASA, Lt_TARTU, Lt_HEREON)
+    #Rrs_R = baseline_average('Rrs', Rrs_PML, Rrs_NASA, Rrs_TARTU, Rrs_HEREON)
+    # Rrs_std_R = baseline_average('Rrs', Rrs_std_PML, Rrs_std_NASA, Rrs_std_TARTU, Rrs_std_HEREON)  
+   
+    Ed_R = baseline_average_V2('Ed', Ed_PML, Ed_NASA, Ed_TARTU, Ed_HEREON)
+    Lsky_R = baseline_average_V2('Lsky', Lsky_PML, Lsky_NASA, Lsky_TARTU, Lsky_HEREON)
+    Lt_R = baseline_average_V2('Lt', Lt_PML, Lt_NASA, Lt_TARTU, Lt_HEREON)
+    Rrs_R = baseline_average_V2('Rrs', Rrs_PML, Rrs_NASA, Rrs_TARTU, Rrs_HEREON)
+    Rrs_std_R = baseline_average_V2('Rrs', Rrs_std_PML, Rrs_std_NASA, Rrs_std_TARTU, Rrs_std_HEREON)  
     nLw_R = read_Aeronet_nLw(path_NLW, Ed_R, bands)    
     
     # Quality control
     Q_mask = QC_mask(path_QC, Ed_R, Ed_PML, Lsky_PML, Rrs_PML, Rrs_std_PML) 
     plot_dataandQCmasks()
+    azimuth_plot()
     
     # results plots    
-    plot_scatter('Ed', Ed_R, Ed_PML, Ed_NASA, Ed_TARTU, Ed_HEREON, Ed_RBINS, Q_mask, Qtype = 'QC_AOC_3')    
-    plot_scatter('Lsky', Lsky_R, Lsky_PML, Lsky_NASA, Lsky_TARTU, Lsky_HEREON, Lsky_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    plot_scatter('Lt', Lt_R, Lt_PML, Lt_NASA, Lt_TARTU, Lt_HEREON, Lt_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    plot_scatter('Rrs', Rrs_R, Rrs_PML, Rrs_NASA, Rrs_TARTU, Rrs_HEREON, Rrs_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    plot_scatter('nLw', nLw_R, nLw_PML, nLw_NASA, nLw_TARTU, nLw_HEREON, nLw_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    
-    plot_residuals('Ed', Ed_R, Ed_PML, Ed_NASA, Ed_TARTU, Ed_HEREON, Ed_RBINS, Q_mask, Qtype = 'QC_AOC_3')    
-    plot_residuals('Lsky', Lsky_R, Lsky_PML, Lsky_NASA, Lsky_TARTU, Lsky_HEREON, Lsky_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    plot_residuals('Lt', Lt_R, Lt_PML, Lt_NASA, Lt_TARTU, Lt_HEREON, Lt_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    plot_residuals('Rrs', Rrs_R, Rrs_PML, Rrs_NASA, Rrs_TARTU, Rrs_HEREON, Rrs_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    plot_residuals('nLw', nLw_R, nLw_PML, nLw_NASA, nLw_TARTU, nLw_HEREON, nLw_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
+    plot_scatter('Ed', Ed_R, Ed_PML, Ed_NASA, Ed_TARTU, Ed_HEREON, Ed_RBINS, Ed_CNR, Ed_NOAA, Q_mask, Qtype = 'QC_CI_3')   
+    plot_scatter('Lsky', Lsky_R, Lsky_PML, Lsky_NASA, Lsky_TARTU, Lsky_HEREON, Lsky_RBINS, Lsky_CNR, Lsky_NOAA, Q_mask, Qtype = 'QC_CI_3') 
+    plot_scatter('Lt', Lt_R, Lt_PML, Lt_NASA, Lt_TARTU, Lt_HEREON, Lt_RBINS, Lt_CNR, Lt_NOAA, Q_mask, Qtype = 'QC_CI_3') 
+    plot_scatter('Rrs', Rrs_R, Rrs_PML, Rrs_NASA, Rrs_TARTU, Rrs_HEREON, Rrs_RBINS,  Rrs_CNR, Rrs_NOAA, Q_mask, Qtype = 'QC_CI_3') 
+    plot_scatter('nLw', nLw_R, nLw_PML, nLw_NASA, nLw_TARTU, nLw_HEREON, nLw_RBINS, nLw_CNR, nLw_NOAA, Q_mask, Qtype = 'QC_CI_3') 
+        
+    plot_residuals('Ed', Ed_R, Ed_PML, Ed_NASA, Ed_TARTU, Ed_HEREON, Ed_RBINS, Ed_CNR, Ed_NOAA, Q_mask, Qtype = 'QC_CI_3')    
+    plot_residuals('Lsky', Lsky_R, Lsky_PML, Lsky_NASA, Lsky_TARTU, Lsky_HEREON, Lsky_RBINS, Lsky_CNR, Lsky_NOAA, Q_mask, Qtype = 'QC_CI_3') 
+    plot_residuals('Lt', Lt_R, Lt_PML, Lt_NASA, Lt_TARTU, Lt_HEREON, Lt_RBINS, Lt_CNR, Lt_NOAA, Q_mask, Qtype = 'QC_CI_3') 
+    plot_residuals('Rrs', Rrs_R, Rrs_PML, Rrs_NASA, Rrs_TARTU, Rrs_HEREON, Rrs_RBINS, Rrs_CNR, Rrs_NOAA, Q_mask, Qtype = 'QC_CI_3') 
+    plot_residuals('nLw', nLw_R, nLw_PML, nLw_NASA, nLw_TARTU, nLw_HEREON, nLw_RBINS, nLw_CNR, nLw_NOAA, Q_mask, Qtype = 'QC_CI_3') 
  
-    Ed_table = tabular_summary('Ed', Ed_R, Ed_PML, Ed_NASA, Ed_TARTU, Ed_HEREON, Ed_RBINS, Q_mask, Qtype = 'QC_AOC_3')    
-    Lsky_table = tabular_summary('Lsky', Lsky_R, Lsky_PML, Lsky_NASA, Lsky_TARTU, Lsky_HEREON, Lsky_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    Lt_table = tabular_summary('Lt', Lt_R, Lt_PML, Lt_NASA, Lt_TARTU, Lt_HEREON, Lt_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    Rrs_table = tabular_summary('Rrs', Rrs_R, Rrs_PML, Rrs_NASA, Rrs_TARTU, Rrs_HEREON, Rrs_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
-    nLw = tabular_summary('nLw', nLw_R, nLw_PML, nLw_NASA, nLw_TARTU, nLw_HEREON, nLw_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
+    # Ed_table = tabular_summary('Ed', Ed_R, Ed_PML, Ed_NASA, Ed_TARTU, Ed_HEREON, Ed_RBINS, Q_mask, Qtype = 'QC_AOC_3')    
+    # Lsky_table = tabular_summary('Lsky', Lsky_R, Lsky_PML, Lsky_NASA, Lsky_TARTU, Lsky_HEREON, Lsky_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
+    # Lt_table = tabular_summary('Lt', Lt_R, Lt_PML, Lt_NASA, Lt_TARTU, Lt_HEREON, Lt_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
+    # Rrs_table = tabular_summary('Rrs', Rrs_R, Rrs_PML, Rrs_NASA, Rrs_TARTU, Rrs_HEREON, Rrs_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
+    # nLw = tabular_summary('nLw', nLw_R, nLw_PML, nLw_NASA, nLw_TARTU, nLw_HEREON, nLw_RBINS, Q_mask, Qtype = 'QC_AOC_3') 
     
- 
+    # Time series for 19/0
