@@ -1,9 +1,5 @@
 # this is a script that contains all (I hope) the variables parameters for each cruise
 
-
-
-
-
 #Turn off/on verbose reporting
 	VBS = true;
 
@@ -27,10 +23,8 @@
 	cal_files_pre = {"SAT2027.cal", "SAT2054.cal", "SAT464.cal"};
 	cal_files_post = {"SAT2027.cal", "SAT2054.cal", "SAT464.cal"};
 	
-
-
 # Set wavelength range (note: this is not the raw wavelength - it is interpolated)
-   wv = [350:2:860]';  #Consistent with JRC format
+   wv = [350:2:860]';  #Consistent with JCR format
 
 # main dir
 MAIN_DIR = "/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/";   
@@ -69,7 +63,7 @@ FN_TEMPCORR_LT = "PML_8-010-20-thermal-0223.csv";
 FN_TEMPCORR_LI = "PML_8-010-20-thermal-0222.csv";
 
 DIR_SLCORR = [MAIN_DIR "HyperSAS_config/Straylight/"];
-FN_SLCORR_ES = "cp_straylight_SAT2027.txt";# File names of Straylight correction factors
+FN_SLCORR_ES = "cp_straylight_SAT2027.txt";# File names of Straylight correction factors for FICE
 FN_SLCORR_LT = "cp_straylight_SAT0464.txt";
 FN_SLCORR_LI = "cp_straylight_SAT2054.txt";
 
@@ -91,7 +85,7 @@ NL_files_post = {"Post/cp_radcal_SAT2027.txt", "Post/cp_radcal_SAT2054.txt", "Po
 # -Flags to check if do non-linearity, temperature, Straylight corrections
 FLAG_NON_LINEARITY = 0; % 0: do not apply correction, 1: apply correction
 FLAG_TEMPERATURE = 0;
-FLAG_STRAY_LIGHT = 1;
+FLAG_STRAY_LIGHT = 0;
 
 #-ACS data Path
 FN_ACS = [MAIN_DIR, "AC-9/ACStoHSAS_sentine.txt"];

@@ -1,6 +1,6 @@
 function [fQs0_fQs, fQ0_fQs0, fQs0, fQs, fQ0, wv] = hsas_fQ_ratio(wv0, sza0, chl0, vza0, phi0, foQ, PLOT, TEST);
 # function modifed by tjor for FICE to apply linear extrapolation for fQ terms outside wavelength range.
-# This enables 412 and 665 nm bands to be evaluated in Rrs analysis
+# This enables 412 and 665 nm bands to be evaluated in nlw analysis
 
 VBS = false;
 

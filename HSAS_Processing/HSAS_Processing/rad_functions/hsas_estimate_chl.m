@@ -1,5 +1,8 @@
 function chl = hsas_estimate_chl(wv, rrs, alg)
 
+# tjor note: for FICE 2022, we use Adriatic Chl parameterization (specified by flag in proc_L2). This is based on 
+# equation (2) in Berthon & Zibordi 2004.
+
 
     chl = nan(size(rrs,1),1);
 
@@ -31,11 +34,10 @@ function chl = hsas_estimate_chl(wv, rrs, alg)
       error ("invalid value");
   endswitch
 
-
 #                   Black,      Atlantic,   Adriatic
 chl_coeff =     [   -0.0067,      0.3190,     0.0910 
                     -2.6815,     -2.3360,    -2.6200 
-                     1.2318,      0.8790,     1.1480  
+                     1.2318,      0.8790,    -1.1480  #  tjor - this was previously +ve. It is -ve in B & Z 2004
                     -3.2713,     -0.1350,    -4.9490
                           0,     -0.0710,     0            ];
     

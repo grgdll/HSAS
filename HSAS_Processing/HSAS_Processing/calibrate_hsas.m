@@ -1,4 +1,4 @@
-# read hasa digital counts and apply calibration coefficients
+# read hsas digital counts and apply calibration coefficients
 
 
 % Modifications for FICE 2022 by tjor:
@@ -6,7 +6,7 @@
 # (i)  Calibration applies to stations rather than days.
 # (ii) Non-linearity correction now implemented in correct_non_linearity_at_Cal_FICE.m (accomodates new data format from Tartu).
 # (iii) Straylight correction has been modified to take Linear Spread Function matrix (L), from which straylight matrix D_SL in derived
-(# previous input was via D_SL directly)
+# previous input was via D_SL directly)
  
  
 clear all
@@ -29,17 +29,12 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"))
 # read input parameters for this cruise
 input_parameters_hsas;
 
-
-		
 ## these are the dirs containig the PRE and POST cals 
 	if isempty(DIN_CALS_POST) 
 	    din_cals = {DIN_CALS_PRE}; 
 	else
 	    din_cals = {DIN_CALS_PRE, DIN_CALS_POST}; 
 	endif
-
-
-
 
 ## compare pre- and post-cruise cals
 for iSN = 1:length(sn)
@@ -58,7 +53,7 @@ for iSN = 1:length(sn)
         fncal_nl = glob([DIN_Non_Linearity NL_files_pre{ical}]); # fncal_nl 
 
 
-        if length(fncal)>2 # this is for when there are more cal files for one instrument (e.g., CAL_G SN223)
+        if length(fncal) > 2 # this is for when there are more cal files for one instrument (e.g., CAL_G SN223)
             fncal = sort(fncal){1};
         elseif length(fncal)==1   # tjor - else statement modified for FICE - I think we just want to read pre/post in turn for each 	 sensor?
             fncal = fncal{1};
@@ -122,7 +117,7 @@ for iSN = 1:length(sn)
             
             int_time = mean(int_time_);
             
-            if ical>1 & (int_time_(1,20) != int_time_(2,20)) % ~all(std(int_time_,[],1)<=eps)
+            if ical > 1 & (int_time_(1,20) != int_time_(2,20)) % ~all(std(int_time_,[],1)<=eps)
                 disp('integration time has changed between calibrations!!!');
                 keyboard
             endif
@@ -168,9 +163,9 @@ for iSN = 1:length(sn)
         sensor_id = sn{iSN};	
 
 # tjor: modifications for FICE non-linearity follow from this point :	
-# - FICE deployment has new data format for NL coefficients - see `radcal_recipies.txt' in HyperSAS_config for more details
-# - We now read a general data matrix, from which alpha is calculated within `correct_non_linearity_at_Cal_FICE()'
-# - We also average pre and post deployment data martrices (similar approach to cal files), before deriving alpha.
+# FICE deployment has new data format for NL coefficients; see `radcal_recipies.txt' in HyperSAS_config for more details
+# We now read a general data matrix, from which alpha is calculated within `correct_non_linearity_at_Cal_FICE()'
+# We also average pre and post deployment data martrices (similar approach to cal files), before deriving alpha.
  if FLAG_NON_LINEARITY == 1
 	  pkg load io
 	  #---radiometer related to sn
@@ -254,7 +249,8 @@ for iSN = 1:length(sn)
   #----Read Straylight Distribution Matrix
   # tjor - for 2022 SL files, Tartu now provide the linear spread function matrix (LSF)
   # This is now normalized to give the straylight distribution matrix, D_SL. eg. see,  
-  #  https://iopscience.iop.org/article/10.1088/0952-4746/34/4/915
+  # https://iopscience.iop.org/article/10.1088/0952-4746/34/4/915
+  # 
    if FLAG_STRAY_LIGHT == 1
 	  disp('Loading StrayLight Distribution Matrix....')  
 

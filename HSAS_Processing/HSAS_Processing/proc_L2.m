@@ -22,7 +22,7 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 # read input parameters for this cruise
 input_parameters_hsas;
 
- fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data 
+fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data 
 #fnin = {'20220713_133100'};
 # fnin = {"20220714_102000"};
 # fnin = {"20220714_102000"};
@@ -343,9 +343,9 @@ endif
 if strcmp(INSTRUMENT,'triosIW');
    disp("No rho correction");
 else
-% L2 = hsas_cmp_rho_2pars(L2); % open ocean rho method
-% L2 = hsas_extract_rho_AeronetOC(L2, 'appwind_spd'); % AAOT (tower) - apparent windspeed can be used
-L2 = hsas_extract_rho_Mobley99(L2, 'appwind_spd');
+# L2 = hsas_cmp_rho_2pars(L2); % open ocean rho method
+L2 = hsas_extract_rho_AeronetOC(L2, 'appwind_spd'); % AAOT (tower) - apparent windspeed can be used. This is Mobley 99.
+# L2 = hsas_extract_rho_windspeed_quadratic(L2, 'appwind_spd');
    
 endif
 	
@@ -489,7 +489,7 @@ L2 = hsas_R0_R(L2); % 'gothic R' ratio for flat surface - see Gordon 2005 (assum
 
 
 # Iteratively estimate chl or add ACS Chl to L2 structure and retrieve fQ values or use L2.chl to extract fQ
-L2.conf.chl_alg = "A";  # (A = Atlantic)
+L2.conf.chl_alg = "Adriatic";  # Options: (A = Atlantic, Adriatic, Black)
 L2.conf.used_acs = false; # flag: ACS Chl used
 
 
