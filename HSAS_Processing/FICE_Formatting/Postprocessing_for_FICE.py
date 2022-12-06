@@ -73,6 +73,7 @@ def unpack_L1(fn_L1):
     
     time = np.array(numeric_to_UTC_time(L1['L1'].gps.time)) 
     windspeed = L1['L1'].appwind_spd
+    phi = L1['L1'].phi
  
     Es = L1['L1'].instr.Es.data # hyperspectral data
     Lt = L1['L1'].instr.Lt.data
@@ -89,7 +90,7 @@ def unpack_L1(fn_L1):
     
     wv = L1['L1'].wv 
 
-    return time, windspeed, Es, Lt, Li, Es_int_t, Lt_int_t, Li_int_t, wv
+    return time, windspeed, phi, Es, Lt, Li, Es_int_t, Lt_int_t, Li_int_t, wv
 
 
 def unpack_L2(fn_L2, time_L1, wv):
@@ -153,7 +154,7 @@ def unpack_L2_nomask(fn_L2):
     exLwn = 10*L2['L2'].exLwn.data # Factor 10 coverts from mw cm^-2 um^-1 to mW m^-2 nm^-1 
 
     windspeed = L2['L2'].appwind_spd
-    rho = L2['L2'].rho     
+    rho = L2['L2'].rho   
         
     return time, wv, Es, Li, Lt, Es_int_t, Lt_int_t, Li_int_t, Rrs, exLwn, windspeed, rho
 
@@ -223,7 +224,7 @@ def station_averages(D):
     return D_mean, D_med, D_std
 
 
-def station_averages_dataframe(D, spec_id, station_i, time_L1, windspeed, srf_bands):
+def station_averages_dataframe(D, spec_id, station_i, time_L1, windspeed, phi, srf_bands):
     '''computes averages in data frame format including station meta data '''
           
     summary_df = pd.DataFrame(index=None) 
@@ -232,7 +233,7 @@ def station_averages_dataframe(D, spec_id, station_i, time_L1, windspeed, srf_ba
     summary_df['water body'] = ['Adriatic Sea', 'Adriatic Sea', 'Adriatic Sea', 'Adriatic Sea']
     summary_df['station start time'] = [str(time_L1[0])[0:19], str(time_L1[0])[0:19], str(time_L1[0])[0:19], str(time_L1[0])[0:19]]
     summary_df['wind speed [m/s] (median, std, mean)'] = [str(np.nanmedian(windspeed)), str(np.nanstd(windspeed)), str(np.nanmean(windspeed)), 'NaN']
-    summary_df['sechi depth'] = ['NaN', 'NaN', 'NaN', 'NaN']  
+    summary_df['phi'] = [phi[0], phi[0], phi[0], phi[0]]  
     
     # averages and std and uncertainty  of downsampled spectra in each band (np.array format)
     D_summary = np.zeros([4,len(srf_bands)])
@@ -371,11 +372,11 @@ def conditions_summaryplots(df_overall):
     
     
 if __name__ == '__main__':
-
     
     # subdirectories to read data
     dir_main = '/data/datasets/cruise_data/active/FRM4SOC_2/FICE22/'
-    dir_procrun = '' # 'processing run'
+    # dir_procrun = 'Nocorrections_FICEcalfiles/FICE_secondsubmission_quadratic_windspeeds/' # 'processing run'
+    dir_procrun = 'Nocorrections_FICEcalfiles/FICE_sixthsubmission_NIR_V2/'
     
     dir_cal = dir_main + 'Processed_TPcorrection/' + dir_procrun + 'Calibrated/'
     dir_L0 = dir_main + 'Processed_TPcorrection/' +  dir_procrun + 'L0/'
@@ -387,14 +388,14 @@ if __name__ == '__main__':
     # subdirectories to write data
     dir_write = dir_main +'Processed_TPcorrection/' + dir_procrun  + 'FICE_format/'
     if os.path.exists(dir_write) == False:
-          os.mkdir(dir_write)
+       os.mkdir(dir_write)
     
     # initialize station sub directories
     stations = sorted(os.listdir(dir_L0))
     station_index = np.arange(0,78,1)
     station_index[70:-1] = np.arange(71,78,1) # raw data from station 70 _134000 is incomplete - cant process
-   # for i in range(len(stations)):
-    #    os.mkdir(dir_write + str(station_index[i]) + '_' + str(stations[i]))
+    for i in range(len(stations)):
+      os.mkdir(dir_write + str(station_index[i]) + '_' + str(stations[i]))
       
     # load OLCI srf
     srf, srf_wv, srf_bands = unpack_srf(dir_srf)
@@ -406,19 +407,19 @@ if __name__ == '__main__':
     exLwn_av_summary = []
 
     dict_list = []   # list to append summaries
+    # for i in range(1): # process each station in sequence
     for i in range(len(stations)): # process each station in sequence
-       
         # access  filenames (hsas data structures) of ith station - cal and L0 currently not used
         # fn_cal = glob.glob(dir_cal + stations[i]  + '/*dat*')
         fn_L0 = glob.glob(dir_L0 + stations[i]  + '/*mat*')        
         fn_L1 = glob.glob(dir_L1 + stations[i]  + '/*mat*') #
         fn_L2 = glob.glob(dir_L2 + stations[i]  + '/*mat*')
         
-        #  fig_L2 = glob.glob(dir_L2 + stations[i]  + '/plot/*png') # optional scrip - re-name plots
+        # fig_L2 = glob.glob(dir_L2 + stations[i]  + '/plot/*png') # optional scrip - re-name plots
         # os.rename(fig_L2[0], dir_L2 + stations[i]  + '/' + str(station_index[i]) + '_HSAS_Level2summaryplots.png')
         
         # unpack variables from L1 and L2 data data stuctures in np array format
-        time_L1, windspeed_L1, Es_L1, Lt_L1, Li_L1, Es_int_time_L1, Lt_int_time_L1, Li_int_time_L1, wv = unpack_L1(fn_L1)
+        time_L1, windspeed_L1, phi_L1, Es_L1, Lt_L1, Li_L1, Es_int_time_L1, Lt_int_time_L1, Li_int_time_L1, wv = unpack_L1(fn_L1)
         # qc_mask, Rrs, exLwn, rho, phi = unpack_L2(fn_L2, time, wv) # L2 data is just where rrs passes QC - it is nan-padded to match length of L1 data
         time, wv, Es, Li, Lt, Es_int_t, Lt_int_t, Li_int_t, Rrs, exLwn, windspeed, rho =  unpack_L2_nomask(fn_L2)
 
@@ -470,11 +471,11 @@ if __name__ == '__main__':
         
 
         # perform averaging/variability for each spectra at each station -outputs dataframe that is appended to station summary in write function
-        Es_av = station_averages_dataframe(Es_OLCI[0],'Es', station_index[i], time_L1, windspeed_L1, srf_bands)
-        Lt_av = station_averages_dataframe(Lt_OLCI[0],'Lt', station_index[i], time_L1, windspeed_L1, srf_bands)
-        Li_av = station_averages_dataframe(Li_OLCI[0],'Li', station_index[i], time_L1, windspeed_L1, srf_bands)
-        Rrs_av = station_averages_dataframe(Rrs_OLCI[0],'reflectance', station_index[i], time_L1, windspeed_L1, srf_bands) 
-        exLwn_av = station_averages_dataframe(exLwn_OLCI[0],'nLw', station_index[i], time_L1, windspeed_L1, srf_bands)
+        Es_av = station_averages_dataframe(Es_OLCI[0],'Es', station_index[i], time_L1, windspeed_L1, phi_L1, srf_bands)
+        Lt_av = station_averages_dataframe(Lt_OLCI[0],'Lt', station_index[i], time_L1, windspeed_L1, phi_L1, srf_bands)
+        Li_av = station_averages_dataframe(Li_OLCI[0],'Li', station_index[i], time_L1, windspeed_L1, phi_L1, srf_bands)
+        Rrs_av = station_averages_dataframe(Rrs_OLCI[0],'reflectance', station_index[i], time_L1, windspeed_L1, phi_L1, srf_bands) 
+        exLwn_av = station_averages_dataframe(exLwn_OLCI[0],'nLw', station_index[i], time_L1, windspeed_L1, phi_L1, srf_bands)
         
         Es_av_summary.append(Es_av)
         Lt_av_summary.append(Lt_av)
@@ -482,20 +483,19 @@ if __name__ == '__main__':
         Rrs_av_summary.append(Rrs_av)
         exLwn_av_summary.append(exLwn_av)
         
-        summary_path = dir_write + 'FRM4SOC_2_FICE_22_AAOT_PML_HSAS_stationsummary_L1timesWindspeeds.csv'
-        
+        summary_path = dir_write + 'FRM4SOC_2_FICE_22_AAOT_PML_HSAS_stationsummary_V6_rhoM99_nLw_localChl_NIRcorrection.csv'
         dict_list = append_to_summary(dict_list) # for conditions summary
         
-        
-     #overall summary - used for station selection    
+    
+    # overall summary - used for station selection    
     write_station_summary(summary_path, time, Es_av_summary, Lt_av_summary, Li_av_summary, Rrs_av_summary, exLwn_av_summary) 
     
-    #overall summary - used for station selection    
+    # overall summary - used for station selection    
     ov_summary_path = dir_write +  '/' + 'FICE_conditions_summary.csv'
     df_overall = pd.DataFrame.from_dict(dict_list)  
     df_overall.to_csv(ov_summary_path, na_rep ='NaN', index = False)
         
-   # conditions_summaryplots(df_overall)
+    # conditions_summaryplots(df_overall)
 
 
   

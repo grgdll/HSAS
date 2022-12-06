@@ -23,7 +23,7 @@ addpath(strcat(pwd, "/rad_functions/DISTRIB_fQ_with_Raman/D_foQ_pa"));
 input_parameters_hsas;
 
 fnin = argv; # tj - THIS NEEDS TO BE UNCOMMENTED to pass all data 
-#fnin = {'20220713_133100'};
+# fnin = {'20220719_095000'};
 # fnin = {"20220714_102000"};
 # fnin = {"20220714_102000"};
 # fnin = {"20220714_102000"};
@@ -344,7 +344,7 @@ if strcmp(INSTRUMENT,'triosIW');
    disp("No rho correction");
 else
 # L2 = hsas_cmp_rho_2pars(L2); % open ocean rho method
-L2 = hsas_extract_rho_AeronetOC(L2, 'appwind_spd'); % AAOT (tower) - apparent windspeed can be used. This is Mobley 99.
+L2 = hsas_extract_rho_AeronetOC(L2, 'appwind_spd'); % AAOT (tower) - apparent windspeed can be used. This is Mobley 99 LUT.
 # L2 = hsas_extract_rho_windspeed_quadratic(L2, 'appwind_spd');
    
 endif
@@ -454,17 +454,18 @@ endif
  disp("----- skipped commented block -----");
  fflush(stdout);
 
+
 % glint correction to water leaving radiance equation
-   L2.rho_fitted = L2.rho; % rho_fitted is name for opean ocean rho method
-   if size(L2.rho_fitted,2)==1; % 1 column implies aeronet rho method has been used
+   L2.rho_fitted = L2.rho;       % rho_fitted is name for opean ocean rho method
+   if size(L2.rho_fitted, 2)==1; % 1 column implies aeronet rho method has been used
       L2.Lw.data = L2.instr.Lt.data - L2.rho_fitted.*L2.instr.Li.data;
    else % 2 columns implies open ocean rho method has been used
       L2.Lw.data = L2.instr.Lt.data - L2.rho_fitted(:,1).*L2.instr.Li.data - L2.rho_fitted(:,2);
    endif
-#endif ??
+   # endif ?
 
-### Apply filter for negative data ###
-ikeep = find(L2.Lw.data(:,L2.wv==600)>0);
+ikeep = find(L2.Lw.data(:,L2.wv==600)>0); #
+
 L2 = hsas_filter(L2, ikeep);
 
 if strcmp(INSTRUMENT,'triosIW');
@@ -474,15 +475,18 @@ if strcmp(INSTRUMENT,'triosIW');
    L2 = hsas_filter(L2, ikeep);
 endif
 
-### Compute Rrs ###
+
+## Compute Rrs ##
 if strcmp(INSTRUMENT,'triosIW');
    L2.Rrs.data = L2.Lw.data./L2.instr.Es.data;
    L2.Rrs_corr.data = L2.Lwcorr.data./L2.instr.Es.data;
-
 else
-	L2.Rrs.data = L2.Lw.data./L2.instr.Es.data;
-
+   L2.Rrs.data = L2.Lw.data./L2.instr.Es.data;                          
 endif
+
+# NIR correction for FICE 2022
+# L2 = hsas_NIR_corr(L2,'2')  
+
 
 % BDRF correction 
 L2 = hsas_R0_R(L2); % 'gothic R' ratio for flat surface - see Gordon 2005 (assumes dependence on theta_v but not windspeed)
@@ -501,7 +505,7 @@ L2 = hsas_extract_F0(L2);
 
 
 # Calculate Lw0
-#L2.Lw.data,L2.R0_R,L2.fQs0_fQs
+# L2.Lw.data,L2.R0_R,L2.fQs0_fQs
 L2.Lw0.data = L2.Lw.data .* L2.R0_R .* L2.fQs0_fQs ;
 
 # Calculate normalised water leaving radiance 
